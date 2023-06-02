@@ -94,7 +94,6 @@ public final class MinesweeperGame extends Game {
         }
 
         map.instance().scheduler().buildTask(this::sendBackToLobby).delay(TaskSchedule.seconds(6)).schedule();
-        sendBackToLobby();
     }
 
     private void sendBackToLobby() {
