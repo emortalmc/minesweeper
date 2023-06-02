@@ -41,7 +41,9 @@ public final class InteractionManager {
 
         final Board board = map.board();
         if (board.isMine(x, z)) {
-            // TODO: Handle game over
+            playMineSound(player);
+            blockUpdater.revealMines(x, z);
+            game.lose();
             return;
         }
 
@@ -77,5 +79,9 @@ public final class InteractionManager {
 
     private void playRevealSound(Player player) {
         player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F), Sound.Emitter.self());
+    }
+
+    private void playMineSound(Player player) {
+        player.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 0.5F, 0.7F), Sound.Emitter.self());
     }
 }

@@ -1,12 +1,19 @@
 package dev.emortal.minestom.minesweeper.game;
 
+import dev.emortal.api.kurushimi.KurushimiMinestomUtils;
 import dev.emortal.minestom.core.Environment;
+import dev.emortal.minestom.gamesdk.GameSdkModule;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
 import java.util.UUID;
+import javax.naming.Name;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.title.Title;
+import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
@@ -17,6 +24,7 @@ import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.trait.InstanceEvent;
 import net.minestom.server.event.trait.PlayerEvent;
+import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -76,6 +84,32 @@ public final class MinesweeperGame extends Game {
 
     @Override
     public void cancel() {
+    }
+
+    public void lose() {
+        final Title title = Title.title(Component.text("You lost!", NamedTextColor.RED), Component.text("Do better next time.", NamedTextColor.RED));
+        for (final Player player : players) {
+            player.showTitle(title);
+        }
+
+        map.instance().scheduler().buildTask(this::sendBackToLobby).delay(TaskSchedule.seconds(6)).schedule();
+        sendBackToLobby();
+    }
+
+    private void sendBackToLobby() {
+        KurushimiMinestomUtils.sendToLobby(players, this::removeGame, this::removeGame);
+    }
+
+    private void removeGame() {
+        GameSdkModule.getGameManager().removeGame(this);
+        cleanUp();
+    }
+
+    private void cleanUp() {
+        for (final Player player : players) {
+            player.kick(Component.text("The game ended but we weren't able to connect you to a lobby. Please reconnect.", NamedTextColor.RED));
+        }
+        MinecraftServer.getInstanceManager().unregisterInstance(map.instance());
     }
 
     public @NotNull EventNode<Event> getEventNode() {

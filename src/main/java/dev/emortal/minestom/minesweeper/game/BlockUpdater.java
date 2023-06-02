@@ -1,12 +1,15 @@
 package dev.emortal.minestom.minesweeper.game;
 
+import dev.emortal.minestom.minesweeper.board.BoardSettings;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
+import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import java.util.List;
 import java.util.function.Supplier;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.sound.SoundEvent;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
@@ -42,5 +45,19 @@ public final class BlockUpdater {
                 return TaskSchedule.nextTick();
             }
         });
+    }
+
+    public void revealMines(int clickedX, int clickedY) {
+        final BoardSettings settings = map.board().getSettings();
+        final AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
+
+        for (int x = 0; x < settings.length(); x++) {
+            for (int y = 0; y < settings.width(); y++) {
+                if (!map.board().isMine(x, y)) continue;
+                batch.setBlock(x, MapManager.FLOOR_HEIGHT, y, map.theme().mine());
+            }
+        }
+
+        batch.apply(map.instance(), () -> map.instance().setBlock(clickedX, MapManager.FLOOR_HEIGHT, clickedY, map.theme().mine()));
     }
 }

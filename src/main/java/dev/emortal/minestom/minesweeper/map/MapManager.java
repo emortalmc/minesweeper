@@ -7,11 +7,18 @@ import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.utils.NamespaceID;
+import net.minestom.server.world.DimensionType;
 import org.jetbrains.annotations.NotNull;
 
 public final class MapManager {
     public static final int FLOOR_HEIGHT = 64;
     public static final Pos SPAWN_POSITION = new Pos(0.5F, FLOOR_HEIGHT + 1, 0.5F, -45F, 0F);
+    private static final DimensionType FULLBRIGHT = DimensionType.builder(NamespaceID.from("emortalmc", "fullbright")).ambientLight(1F).build();
+
+    static {
+        MinecraftServer.getDimensionTypeManager().addDimension(FULLBRIGHT);
+    }
 
     public @NotNull BoardMap createMap() {
         final Board board = new Board(BoardSettings.DEFAULT);
@@ -26,7 +33,7 @@ public final class MapManager {
     }
 
     private Instance createInstance() {
-        final Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer();
+        final Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer(FULLBRIGHT);
         instance.setGenerator(unit -> {
             unit.modifier().fillHeight(FLOOR_HEIGHT, 65, Block.GRASS_BLOCK);
             unit.modifier().fillHeight(60, 64, Block.DIRT);
