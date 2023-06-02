@@ -9,7 +9,6 @@ import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
 import java.util.UUID;
-import javax.naming.Name;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.title.Title;
@@ -35,6 +34,7 @@ public final class MinesweeperGame extends Game {
     private final EventNode<Event> eventNode;
     private final BoardMap map;
     private final InteractionManager interactionManager;
+    private final TeamAllocator teamAllocator = new TeamAllocator();
 
     public MinesweeperGame(@NotNull GameCreationInfo creationInfo, @NotNull EventNode<Event> gameEventNode, @NotNull BoardMap map) {
         super(creationInfo, gameEventNode);
@@ -76,6 +76,7 @@ public final class MinesweeperGame extends Game {
 
         player.setAutoViewable(true);
         player.setGameMode(GameMode.CREATIVE);
+        teamAllocator.allocate(player);
     }
 
     @Override
