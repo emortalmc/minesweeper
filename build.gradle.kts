@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+
 plugins {
     java
     id("com.github.johnrengelman.shadow") version "7.1.2"
@@ -25,6 +27,32 @@ dependencies {
 //    implementation("net.kyori:adventure-text-minimessage:4.13.0")
 }
 
-tasks.withType<JavaCompile> {
-    options.encoding = "UTF-8"
+java {
+    toolchain {
+        languageVersion.set(JavaLanguageVersion.of(17))
+    }
+}
+
+tasks {
+    withType<JavaCompile> {
+        options.encoding = "UTF-8"
+    }
+
+    named<ShadowJar>("shadowJar") {
+        mergeServiceFiles()
+
+        manifest {
+            attributes(
+                "Main-Class" to "dev.emortal.minestom.minesweeper.Entrypoint",
+                "Multi-Release" to true
+            )
+        }
+    }
+
+    withType<AbstractArchiveTask> {
+        isPreserveFileTimestamps = false
+        isReproducibleFileOrder = true
+    }
+
+    build { dependsOn(shadowJar) }
 }
