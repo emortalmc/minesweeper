@@ -11,6 +11,7 @@ import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
 import java.util.UUID;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
@@ -87,8 +88,23 @@ public final class MinesweeperGame extends Game {
     public void cancel() {
     }
 
+    public void win() {
+        final Title title = Title.title(
+                Component.text("VICTORY!", NamedTextColor.GOLD, TextDecoration.BOLD),
+                Component.text("Bardy best dev", NamedTextColor.GRAY)
+        );
+        for (final Player player : players) {
+            player.showTitle(title);
+        }
+
+        map.instance().scheduler().buildTask(this::sendBackToLobby).delay(TaskSchedule.seconds(6)).schedule();
+    }
+
     public void lose() {
-        final Title title = Title.title(Component.text("You lost!", NamedTextColor.RED), Component.text("Do better next time.", NamedTextColor.RED));
+        final Title title = Title.title(
+                Component.text("DEFEAT!", NamedTextColor.RED, TextDecoration.BOLD),
+                Component.text("Kotlin user", NamedTextColor.GRAY)
+        );
         for (final Player player : players) {
             player.showTitle(title);
         }

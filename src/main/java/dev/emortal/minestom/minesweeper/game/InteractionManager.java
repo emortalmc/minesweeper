@@ -69,7 +69,8 @@ public final class InteractionManager {
         }
 
         if (viewManager.getUnrevealed() <= 0) {
-            // TODO: Handle victory
+            playWinSounds(player);
+            game.win();
             return;
         }
 
@@ -124,6 +125,11 @@ public final class InteractionManager {
     }
 
     private void playMineSound(Player player) {
-        player.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 0.5F, 0.7F), Sound.Emitter.self());
+        player.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 4F, 0.84F), Sound.Emitter.self());
+    }
+
+    private void playWinSounds(Player player) {
+        player.playSound(Sound.sound(SoundEvent.ENTITY_VILLAGER_CELEBRATE, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
+        player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
     }
 }
