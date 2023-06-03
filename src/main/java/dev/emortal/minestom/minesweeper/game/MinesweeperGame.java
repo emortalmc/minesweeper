@@ -34,7 +34,6 @@ public final class MinesweeperGame extends Game {
 
     private final EventNode<Event> eventNode;
     private final BoardMap map;
-    private final InteractionManager interactionManager;
     private final TeamAllocator teamAllocator = new TeamAllocator();
 
     public MinesweeperGame(@NotNull GameCreationInfo creationInfo, @NotNull EventNode<Event> gameEventNode, @NotNull BoardMap map) {
@@ -52,7 +51,7 @@ public final class MinesweeperGame extends Game {
         });
         gameEventNode.addChild(this.eventNode);
 
-        this.interactionManager = new InteractionManager(this, map);
+        new InteractionManager(this, map);
         this.eventNode.addListener(PlayerBlockBreakEvent.class, event -> event.setCancelled(true));
 
         this.eventNode.addListener(PlayerSpawnEvent.class, event -> MineIndicatorLoader.registerForPlayer(event.getPlayer()));

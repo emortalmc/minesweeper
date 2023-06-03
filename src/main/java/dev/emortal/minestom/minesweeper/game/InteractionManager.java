@@ -6,6 +6,7 @@ import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
@@ -23,6 +24,7 @@ public final class InteractionManager {
     private final ViewManager viewManager;
     private final BlockUpdater blockUpdater;
     private boolean firstClick = true;
+    private final AtomicBoolean finished = new AtomicBoolean(false);
 
     public InteractionManager(@NotNull MinesweeperGame game, @NotNull BoardMap map) {
         this.game = game;
@@ -35,6 +37,11 @@ public final class InteractionManager {
     }
 
     public void onBreak(@NotNull PlayerBlockBreakEvent event) {
+        if (finished.get()) {
+            event.setCancelled(true);
+            return;
+        }
+
         final Player player = event.getPlayer();
         final int x = event.getBlockPosition().blockX();
         final int y = event.getBlockPosition().blockY();
@@ -49,6 +56,7 @@ public final class InteractionManager {
             playMineSound(player);
             blockUpdater.revealMines(x, z);
             game.lose();
+            finished.set(true);
             return;
         }
 
@@ -71,6 +79,7 @@ public final class InteractionManager {
         if (viewManager.getUnrevealed() <= 0) {
             playWinSounds(player);
             game.win();
+            finished.set(true);
             return;
         }
 
@@ -79,6 +88,11 @@ public final class InteractionManager {
     }
 
     public void onClick(@NotNull PlayerBlockInteractEvent event) {
+        if (finished.get()) {
+            event.setCancelled(true);
+            return;
+        }
+
         final Player player = event.getPlayer();
         final Instance instance = event.getInstance();
         final Block block = event.getBlock();

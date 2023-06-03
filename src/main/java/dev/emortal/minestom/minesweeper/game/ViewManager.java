@@ -8,11 +8,7 @@ import dev.emortal.minestom.minesweeper.util.Direction8;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicInteger;
-import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Vec;
-import net.minestom.server.entity.Player;
-import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViewManager {
