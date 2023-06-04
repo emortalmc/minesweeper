@@ -25,6 +25,13 @@ public final class TeamAllocator {
         player.setTag(PlayerTags.COLOR, color);
     }
 
+    public void deallocate(@NotNull Player player) {
+        final TeamColor color = player.getTag(PlayerTags.COLOR);
+        if (color == null) return;
+
+        availableColors.add(color);
+    }
+
     private static TeamColor getRandom() {
         return AVAILABLE_COLORS.get(ThreadLocalRandom.current().nextInt(AVAILABLE_COLORS.size()));
     }

@@ -14,20 +14,18 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
-import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.Event;
 import net.minestom.server.event.EventFilter;
 import net.minestom.server.event.EventNode;
-import net.minestom.server.event.instance.RemoveEntityFromInstanceEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
+import net.minestom.server.event.player.PlayerDisconnectEvent;
 import net.minestom.server.event.player.PlayerLoginEvent;
 import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.event.trait.InstanceEvent;
 import net.minestom.server.event.trait.PlayerEvent;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.scoreboard.Team;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
@@ -39,6 +37,7 @@ public final class MinesweeperGame extends Game {
     private final EventNode<Event> eventNode;
     private final BoardMap map;
     private final TeamAllocator teamAllocator = new TeamAllocator();
+    private final PlayerDisconnectHandler disconnectHandler = new PlayerDisconnectHandler(this, teamAllocator);
 
     public MinesweeperGame(@NotNull GameCreationInfo creationInfo, @NotNull EventNode<Event> gameEventNode, @NotNull BoardMap map) {
         super(creationInfo, gameEventNode);
@@ -59,6 +58,8 @@ public final class MinesweeperGame extends Game {
         this.eventNode.addListener(PlayerBlockBreakEvent.class, event -> event.setCancelled(true));
 
         this.eventNode.addListener(PlayerSpawnEvent.class, event -> MineIndicatorLoader.registerForPlayer(event.getPlayer()));
+
+        this.eventNode.addListener(PlayerDisconnectEvent.class, event -> disconnectHandler.onDisconnect(event.getPlayer()));
     }
 
     private boolean isValidPlayerForGame(@NotNull Player player) {
@@ -83,21 +84,13 @@ public final class MinesweeperGame extends Game {
         teamAllocator.allocate(player);
     }
 
-    private void onLeaveInstance(RemoveEntityFromInstanceEvent event) {
-        if (!(event.getEntity() instanceof Player)) return;
-
-        final Instance instance = event.getInstance();
-        if (instance.getPlayers().size() > 1) return;
-
-        MinecraftServer.getInstanceManager().unregisterInstance(instance);
-    }
-
     @Override
     public void start() {
     }
 
     @Override
     public void cancel() {
+        sendBackToLobby();
     }
 
     public void win() {
@@ -125,21 +118,19 @@ public final class MinesweeperGame extends Game {
     }
 
     private void sendBackToLobby() {
-        KurushimiMinestomUtils.sendToLobby(players, this::removeGame, this::removeGame);
+        KurushimiMinestomUtils.sendToLobby(players, this::finish, this::finish);
     }
 
-    private void removeGame() {
+    public void finish() {
         GameSdkModule.getGameManager().removeGame(this);
         cleanUp();
     }
 
     private void cleanUp() {
         for (final Player player : players) {
-            final Team team = player.getTeam();
-            if (team != null) MinecraftServer.getTeamManager().deleteTeam(team);
-
             player.kick(Component.text("The game ended but we weren't able to connect you to a lobby. Please reconnect.", NamedTextColor.RED));
         }
+        map.instance().scheduleNextTick(MinecraftServer.getInstanceManager()::unregisterInstance);
     }
 
     public @NotNull EventNode<Event> getEventNode() {
