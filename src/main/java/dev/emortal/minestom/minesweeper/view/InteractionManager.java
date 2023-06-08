@@ -1,12 +1,14 @@
-package dev.emortal.minestom.minesweeper.game;
+package dev.emortal.minestom.minesweeper.view;
 
 import dev.emortal.minestom.minesweeper.board.Board;
 import dev.emortal.minestom.minesweeper.board.BoardSettings;
+import dev.emortal.minestom.minesweeper.game.BlockUpdater;
+import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
+import dev.emortal.minestom.minesweeper.game.PlayerTags;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicBoolean;
 import net.kyori.adventure.sound.Sound;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
@@ -23,21 +25,24 @@ public final class InteractionManager {
     private final BoardMap map;
     private final ViewManager viewManager;
     private final BlockUpdater blockUpdater;
+    private final ActionBar actionBar;
+
     private boolean firstClick = true;
-    private final AtomicBoolean finished = new AtomicBoolean(false);
+    private boolean finished;
 
     public InteractionManager(@NotNull MinesweeperGame game, @NotNull BoardMap map) {
         this.game = game;
         this.map = map;
         this.viewManager = new ViewManager(map);
         this.blockUpdater = new BlockUpdater(map, viewManager);
+        this.actionBar = new ActionBar(map.instance(), map.board().getSettings().mines());
 
         game.getEventNode().addListener(PlayerBlockBreakEvent.class, this::onBreak);
         game.getEventNode().addListener(PlayerBlockInteractEvent.class, this::onClick);
     }
 
     public void onBreak(@NotNull PlayerBlockBreakEvent event) {
-        if (finished.get()) {
+        if (finished) {
             event.setCancelled(true);
             return;
         }
@@ -47,16 +52,13 @@ public final class InteractionManager {
         final int y = event.getBlockPosition().blockY();
         final int z = event.getBlockPosition().blockZ();
 
-        if (y != MapManager.FLOOR_HEIGHT || isOutsideBoard(x, z)) return;
+        if (isOutsideBoard(x, y, z)) return;
         if (event.getInstance().getBlock(x, y + 1, z).name().endsWith("carpet")) return;
         if (!player.getItemInMainHand().isAir()) return;
 
         final Board board = map.board();
         if (board.isMine(x, z)) {
-            playMineSound(player);
-            blockUpdater.revealMines(x, z);
-            game.lose();
-            finished.set(true);
+            loseGame(player, x, z);
             return;
         }
 
@@ -79,16 +81,24 @@ public final class InteractionManager {
         if (viewManager.getUnrevealed() <= 0) {
             playWinSounds(player);
             game.win();
-            finished.set(true);
+            finished = true;
             return;
         }
 
         if (blocksToChange.isEmpty()) return;
-        blockUpdater.updateBlocks(blocksToChange, player);
+        blockUpdater.updateBlocks(blocksToChange);
+        actionBar.update();
+    }
+
+    private void loseGame(@NotNull Player player, int x, int z) {
+        playMineSound(player);
+        blockUpdater.revealMines(x, z);
+        game.lose();
+        finished = true;
     }
 
     public void onClick(@NotNull PlayerBlockInteractEvent event) {
-        if (finished.get()) {
+        if (finished) {
             event.setCancelled(true);
             return;
         }
@@ -110,28 +120,29 @@ public final class InteractionManager {
             return;
         }
 
-        if (y != MapManager.FLOOR_HEIGHT || isOutsideBoard(x, z)) {
-            event.setCancelled(true);
-            return;
-        }
-
-        if (instance.getBlock(x, y + 1, z).name().endsWith("carpet")) {
-            event.setCancelled(true);
-            return;
-        }
-
-        if (viewManager.isRevealed(x, z) && !map.board().isMine(x, z)) {
+        if (isInvalidFlag(instance, x, y, z)) {
             event.setCancelled(true);
             return;
         }
 
         instance.setBlock(x, y + 1, z, player.getTag(PlayerTags.COLOR).carpet());
         player.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_FLAP, Sound.Source.MASTER, 0.6F, 2F));
+        actionBar.incrementFlags();
     }
 
-    private boolean isOutsideBoard(int x, int y) {
+    private boolean isInvalidFlag(@NotNull Instance instance, int x, int y, int z) {
+        return isOutsideBoard(x, y, z) || // Out of bounds
+                hasCarpetAbove(instance, x, y, z) || // Somehow clicked a block with carpet on top, cannot flag
+                (viewManager.isRevealed(x, z) && !map.board().isMine(x, z)); // Is revealed and not a mine
+    }
+
+    private boolean hasCarpetAbove(@NotNull Instance instance, int x, int y, int z) {
+        return instance.getBlock(x, y + 1, z).name().endsWith("carpet");
+    }
+
+    private boolean isOutsideBoard(int x, int y, int z) {
         final BoardSettings settings = map.board().getSettings();
-        return x < 0 || x >= settings.length() || y < 0 || y >= settings.width();
+        return y != MapManager.FLOOR_HEIGHT || x < 0 || x >= settings.length() || z < 0 || z >= settings.width();
     }
 
     private void playRevealSound(Player player) {

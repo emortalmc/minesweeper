@@ -4,10 +4,10 @@ import dev.emortal.minestom.minesweeper.board.BoardSettings;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
+import dev.emortal.minestom.minesweeper.view.ViewManager;
 import java.util.List;
 import java.util.function.Supplier;
 import net.kyori.adventure.sound.Sound;
-import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.sound.SoundEvent;
@@ -24,7 +24,7 @@ public final class BlockUpdater {
         this.viewManager = viewManager;
     }
 
-    public void updateBlocks(@NotNull List<Vec2> toUpdate, @NotNull Player player) {
+    public void updateBlocks(@NotNull List<Vec2> toUpdate) {
         final Instance instance = map.instance();
         instance.scheduler().submitTask(new Supplier<>() {
             int i = 0;

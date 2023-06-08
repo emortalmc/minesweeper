@@ -1,4 +1,4 @@
-package dev.emortal.minestom.minesweeper.game;
+package dev.emortal.minestom.minesweeper.view;
 
 import dev.emortal.minestom.minesweeper.board.Board;
 import dev.emortal.minestom.minesweeper.board.BoardSettings;
@@ -8,7 +8,6 @@ import dev.emortal.minestom.minesweeper.util.Direction8;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import java.util.ArrayList;
 import java.util.List;
-import net.minestom.server.coordinate.Vec;
 import org.jetbrains.annotations.NotNull;
 
 public final class ViewManager {
@@ -46,7 +45,7 @@ public final class ViewManager {
     }
 
     private void placeMap(int x, int y, int mines) {
-        map.theme().revealedSquarePlacer().revealSquare(map, new Vec(x, MapManager.FLOOR_HEIGHT + 1, y), mines);
+        map.theme().revealedSquarePlacer().revealSquare(map, x, y, mines);
     }
 
     public List<Vec2> revealAroundStart(int x, int y) {

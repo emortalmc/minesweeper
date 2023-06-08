@@ -19,7 +19,7 @@ public record MapTheme(@NotNull Block checkerMain, @NotNull Block checkerAlterna
 
     @FunctionalInterface
     public interface RevealedSquarePlacer {
-        RevealedSquarePlacer DEFAULT = (map, pos, surroundingCount) -> {
+        RevealedSquarePlacer DEFAULT = (map, x, y, surroundingCount) -> {
             if (surroundingCount < 1) return;
             final Instance instance = map.instance();
 
@@ -32,9 +32,9 @@ public record MapTheme(@NotNull Block checkerMain, @NotNull Block checkerAlterna
                     .meta(MapMeta.class, data -> data.mapId(surroundingCount))
                     .build());
 
-            entity.setInstance(instance, new Pos(pos.x(), pos.y(), pos.z(), 0F, -90F));
+            entity.setInstance(instance, new Pos(x, MapManager.FLOOR_HEIGHT + 1, y, 0F, -90F));
         };
 
-        void revealSquare(@NotNull BoardMap map, @NotNull Point pos, int surroundingCount);
+        void revealSquare(@NotNull BoardMap map, int x, int y, int surroundingCount);
     }
 }
