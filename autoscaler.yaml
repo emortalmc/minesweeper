@@ -1,0 +1,14 @@
+apiVersion: autoscaling.agones.dev/v1
+kind: FleetAutoscaler
+metadata:
+  name: minesweeper
+  namespace: emortalmc
+
+spec:
+  fleetName: minesweeper
+  policy:
+    type: Buffer
+    buffer:
+      bufferSize: 1
+      minReplicas: 1
+      maxReplicas: 5
