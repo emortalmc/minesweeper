@@ -38,7 +38,7 @@ spec:
 
           containers:
             - name: minesweeper
-              image: ghcr.io/emortalmc/minesweeper:4d010e347d94d702212b825cff449b98b39e660d
+              image: ghcr.io/emortalmc/minesweeper:1d4036d637566ff75d53a8741c2af879eb2b3df5
 
               resources:
                 requests:
