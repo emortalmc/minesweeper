@@ -91,7 +91,11 @@ public final class InteractionManager {
     }
 
     private void loseGame(@NotNull Player player, int x, int z) {
-        playMineSound(player);
+        for (Player gamePlayer : this.game.getPlayers()) {
+            playMineSound(gamePlayer);
+            // todo send loss messages
+        }
+
         blockUpdater.revealMines(x, z);
         game.lose();
         finished = true;
