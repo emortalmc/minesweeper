@@ -10,6 +10,8 @@ import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import java.util.List;
 import net.kyori.adventure.sound.Sound;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
@@ -91,9 +93,13 @@ public final class InteractionManager {
     }
 
     private void loseGame(@NotNull Player player, int x, int z) {
+        Component lossMessage = Component.text(player.getUsername(), NamedTextColor.RED)
+                .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY));
+
         for (Player gamePlayer : this.game.getPlayers()) {
             playMineSound(gamePlayer);
-            // todo send loss messages
+
+            gamePlayer.sendMessage(lossMessage);
         }
 
         blockUpdater.revealMines(x, z);
