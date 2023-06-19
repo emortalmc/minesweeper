@@ -8,12 +8,14 @@ public enum TeamColor {
 
     RED(NamedTextColor.RED, Block.RED_CARPET),
     ORANGE(NamedTextColor.GOLD, Block.ORANGE_CARPET),
-    GREEN(NamedTextColor.GREEN, Block.LIME_CARPET),
+    GREEN(NamedTextColor.DARK_GREEN, Block.GREEN_CARPET),
     BLUE(NamedTextColor.BLUE, Block.BLUE_CARPET),
     PINK(NamedTextColor.LIGHT_PURPLE, Block.PINK_CARPET),
     PURPLE(NamedTextColor.DARK_PURPLE, Block.PURPLE_CARPET),
     AQUA(NamedTextColor.AQUA, Block.CYAN_CARPET),
-    YELLOW(NamedTextColor.YELLOW, Block.YELLOW_CARPET);
+    YELLOW(NamedTextColor.YELLOW, Block.YELLOW_CARPET),
+    DARK_AQUA(NamedTextColor.DARK_AQUA, Block.CYAN_CARPET),
+    LIGHT_GRAY(NamedTextColor.GRAY, Block.LIGHT_GRAY_CARPET),;
 
     private static final TeamColor[] VALUES = values();
 
