@@ -21,7 +21,7 @@ repositories {
 dependencies {
     implementation("com.google.protobuf:protobuf-java-util:3.21.12")
 
-    implementation("dev.emortal.minestom:core:63a461b")
+    implementation("dev.emortal.minestom:core:85ae46e")
     implementation("dev.emortal.minestom:game-sdk:4d22719")
 
 //    implementation("net.kyori:adventure-text-minimessage:4.13.0")
