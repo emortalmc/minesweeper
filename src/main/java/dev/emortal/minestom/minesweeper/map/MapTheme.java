@@ -1,6 +1,5 @@
 package dev.emortal.minestom.minesweeper.map;
 
-import net.minestom.server.coordinate.Point;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;

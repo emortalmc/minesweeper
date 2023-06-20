@@ -4,12 +4,17 @@ import dev.emortal.minestom.minesweeper.board.Board;
 import dev.emortal.minestom.minesweeper.board.BoardSettings;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.Pos;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.utils.NamespaceID;
 import net.minestom.server.world.DimensionType;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 
 public final class MapManager {
     public static final int FLOOR_HEIGHT = 64;
@@ -40,12 +45,18 @@ public final class MapManager {
         });
         instance.enableAutoChunkLoad(false);
 
+        // Store the futures so we can use CompletableFuture#allOf
+        Set<CompletableFuture<Chunk>> futures = new HashSet<>();
+
         final int radius = 5;
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
-                instance.loadChunk(x, z).join();
+                CompletableFuture<Chunk> future = instance.loadChunk(x, z);
+                futures.add(future);
             }
         }
+
+        CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
 
         return instance;
     }

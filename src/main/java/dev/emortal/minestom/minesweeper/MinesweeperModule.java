@@ -15,7 +15,7 @@ import org.jetbrains.annotations.NotNull;
 public final class MinesweeperModule extends Module {
     public static final int MIN_PLAYERS = 1;
 
-    protected MinesweeperModule(@NotNull ModuleEnvironment environment) {
+    MinesweeperModule(@NotNull ModuleEnvironment environment) {
         super(environment);
 
         final MapManager mapManager = new MapManager();
