@@ -1,4 +1,4 @@
-FROM --platform=$BUILDPLATFORM eclipse-temurin:17-jre
+FROM --platform=$BUILDPLATFORM eclipse-temurin:20-jre
 
 RUN mkdir /app
 WORKDIR /app

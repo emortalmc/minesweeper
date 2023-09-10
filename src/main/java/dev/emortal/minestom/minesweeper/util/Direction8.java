@@ -20,10 +20,10 @@ public enum Direction8 {
     }
 
     public int offsetX() {
-        return offsetX;
+        return this.offsetX;
     }
 
     public int offsetY() {
-        return offsetY;
+        return this.offsetY;
     }
 }

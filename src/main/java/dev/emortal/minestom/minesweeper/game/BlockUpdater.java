@@ -16,8 +16,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class BlockUpdater {
 
-    private final BoardMap map;
-    private final ViewManager viewManager;
+    private final @NotNull BoardMap map;
+    private final @NotNull ViewManager viewManager;
 
     public BlockUpdater(@NotNull BoardMap map, @NotNull ViewManager viewManager) {
         this.map = map;
@@ -25,39 +25,55 @@ public final class BlockUpdater {
     }
 
     public void updateBlocks(@NotNull List<Vec2> toUpdate) {
-        final Instance instance = map.instance();
-        instance.scheduler().submitTask(new Supplier<>() {
-            int i = 0;
-
-            @Override
-            public TaskSchedule get() {
-                final float pitchOffset = ((float) i) / 50F / 5F;
-                instance.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F + pitchOffset), Sound.Emitter.self());
-
-                for (int j = 0; j < 5; j++) {
-                    final Vec2 pos = toUpdate.get(i);
-                    viewManager.reveal(pos.x(), pos.y());
-
-                    i++;
-                    if (i >= toUpdate.size()) return TaskSchedule.stop();
-                }
-
-                return TaskSchedule.nextTick();
-            }
-        });
+        this.map.instance().scheduler().submitTask(new BlockUpdateTask(this.viewManager, this.map.instance(), toUpdate));
     }
 
     public void revealMines(int clickedX, int clickedY) {
-        final BoardSettings settings = map.board().getSettings();
-        final AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
+        BoardSettings settings = this.map.board().getSettings();
+        AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
 
         for (int x = 0; x < settings.length(); x++) {
             for (int y = 0; y < settings.width(); y++) {
-                if (!map.board().isMine(x, y)) continue;
-                batch.setBlock(x, MapManager.FLOOR_HEIGHT, y, map.theme().mine());
+                if (!this.map.board().isMine(x, y)) continue;
+                batch.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.map.theme().mine());
             }
         }
 
-        batch.apply(map.instance(), () -> map.instance().setBlock(clickedX, MapManager.FLOOR_HEIGHT, clickedY, map.theme().mine()));
+        batch.apply(this.map.instance(), () -> this.map.instance().setBlock(clickedX, MapManager.FLOOR_HEIGHT, clickedY, this.map.theme().mine()));
+    }
+
+    private static final class BlockUpdateTask implements Supplier<TaskSchedule> {
+
+        private final @NotNull ViewManager viewManager;
+        private final @NotNull Instance instance;
+        private final @NotNull List<Vec2> toUpdate;
+
+        private int i = 0;
+
+        BlockUpdateTask(@NotNull ViewManager viewManager, @NotNull Instance instance, @NotNull List<Vec2> toUpdate) {
+            this.viewManager = viewManager;
+            this.instance = instance;
+            this.toUpdate = toUpdate;
+        }
+
+        @Override
+        public TaskSchedule get() {
+            this.playUpdateSound();
+
+            for (int j = 0; j < 5; j++) {
+                Vec2 pos = this.toUpdate.get(this.i);
+                this.viewManager.reveal(pos.x(), pos.y());
+
+                this.i++;
+                if (this.i >= this.toUpdate.size()) return TaskSchedule.stop();
+            }
+
+            return TaskSchedule.nextTick();
+        }
+
+        private void playUpdateSound() {
+            float pitchOffset = this.i / 50F / 5F;
+            this.instance.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F + pitchOffset), Sound.Emitter.self());
+        }
     }
 }

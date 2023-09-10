@@ -1,5 +1,3 @@
-import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
-
 plugins {
     java
     id("com.github.johnrengelman.shadow") version "7.1.2"
@@ -19,31 +17,31 @@ repositories {
 }
 
 dependencies {
-    implementation("com.google.protobuf:protobuf-java-util:3.21.12")
-
-    implementation("dev.emortal.minestom:core:1aa2d5e")
-    implementation("dev.emortal.minestom:game-sdk:4d22719")
+    implementation("dev.emortal.minestom:game-sdk:bf1bede")
 
 //    implementation("net.kyori:adventure-text-minimessage:4.13.0")
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(17))
+        languageVersion.set(JavaLanguageVersion.of(20))
     }
 }
 
 tasks {
-    withType<JavaCompile> {
-        options.encoding = "UTF-8"
+    compileJava {
+        options.compilerArgs.addAll(listOf(
+            "--release", "20",
+            "--enable-preview"
+        ))
     }
 
-    named<ShadowJar>("shadowJar") {
+    shadowJar {
         mergeServiceFiles()
 
         manifest {
             attributes(
-                "Main-Class" to "dev.emortal.minestom.minesweeper.Entrypoint",
+                "Main-Class" to "dev.emortal.minestom.minesweeper.Main",
                 "Multi-Release" to true
             )
         }
@@ -54,5 +52,7 @@ tasks {
         isReproducibleFileOrder = true
     }
 
-    build { dependsOn(shadowJar) }
+    build {
+        dependsOn(shadowJar)
+    }
 }

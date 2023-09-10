@@ -10,54 +10,52 @@ import java.time.Duration;
 
 public final class ActionBar {
 
-    private final Instance instance;
+    private final @NotNull Instance instance;
     private final int mines;
-    private int flags;
     private final long startTime;
+
+    private int flags;
 
     public ActionBar(@NotNull Instance instance, int mines) {
         this.instance = instance;
         this.mines = mines;
-
         this.startTime = System.currentTimeMillis();
 
         // Keep action bar shown
-        instance.scheduler().buildTask(this::update).repeat(TaskSchedule.tick(20)).schedule();
+        this.instance.scheduler().buildTask(this::update).repeat(TaskSchedule.tick(20)).schedule();
     }
 
     public void incrementFlags() {
-        flags++;
-        update();
+        this.flags++;
+        this.update();
     }
 
     public void update() {
-        Duration duration = Duration.ofMillis(System.currentTimeMillis() - startTime);
+        Duration duration = Duration.ofMillis(System.currentTimeMillis() - this.startTime);
 
         // ☠ {mines} MINES | ⚑ {flags} FLAGS | ⌚ 1m 23s
-        instance.sendActionBar(
-                Component.text()
-                        .append(Component.text("☠ ", NamedTextColor.RED))
-                        .append(Component.text(mines, NamedTextColor.RED))
-                        .append(Component.text(" MINES", NamedTextColor.RED))
-                        .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text("⚑ ", NamedTextColor.GREEN))
-                        .append(Component.text(flags, NamedTextColor.GREEN))
-                        .append(Component.text(" FLAGS", NamedTextColor.GREEN))
-                        .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                        .append(Component.text("⌚ ", NamedTextColor.AQUA))
-                        .append(Component.text(formatDuration(duration), NamedTextColor.AQUA))
-        );
+        this.instance.sendActionBar(Component.text()
+                .append(Component.text("☠ ", NamedTextColor.RED))
+                .append(Component.text(this.mines, NamedTextColor.RED))
+                .append(Component.text(" MINES", NamedTextColor.RED))
+                .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("⚑ ", NamedTextColor.GREEN))
+                .append(Component.text(this.flags, NamedTextColor.GREEN))
+                .append(Component.text(" FLAGS", NamedTextColor.GREEN))
+                .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("⌚ ", NamedTextColor.AQUA))
+                .append(Component.text(this.formatDuration(duration), NamedTextColor.AQUA)));
     }
 
-    private String formatDuration(Duration duration) {
+    private @NotNull String formatDuration(@NotNull Duration duration) {
         long hours = duration.toHours();
-        long mins = duration.toMinutesPart();
-        long secs = duration.toSecondsPart();
+        long minutes = duration.toMinutesPart();
+        long seconds = duration.toSecondsPart();
 
         if (hours == 0) {
-            return String.format("%dm %ds", mins, secs);
+            return String.format("%dm %ds", minutes, seconds);
         } else {
-            return String.format("%dh %dm %ds", hours, mins, secs);
+            return String.format("%dh %dm %ds", hours, minutes, seconds);
         }
     }
 }

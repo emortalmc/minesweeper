@@ -12,8 +12,8 @@ import org.jetbrains.annotations.NotNull;
 
 public final class PlayerDisconnectHandler {
 
-    private final MinesweeperGame game;
-    private final TeamAllocator teamAllocator;
+    private final @NotNull MinesweeperGame game;
+    private final @NotNull TeamAllocator teamAllocator;
 
     public PlayerDisconnectHandler(@NotNull MinesweeperGame game, @NotNull TeamAllocator teamAllocator) {
         this.game = game;
@@ -21,34 +21,35 @@ public final class PlayerDisconnectHandler {
     }
 
     public void onDisconnect(@NotNull Player left) {
-        game.getPlayers().remove(left);
-        removeFromTeam(left);
+        this.removeFromTeam(left);
 
-        sendQuitMessage(left);
-        playQuitSound();
+        this.sendQuitMessage(left);
+        this.playQuitSound();
 
-        if (game.getPlayers().size() == 0) game.finish();
+        if (this.game.getPlayers().isEmpty()) {
+            this.game.finish();
+        }
     }
 
-    private void removeFromTeam(Player left) {
-        teamAllocator.deallocate(left);
+    private void removeFromTeam(@NotNull Player left) {
+        this.teamAllocator.deallocate(left);
         left.removeTag(PlayerTags.COLOR);
 
-        final Team team = left.getTeam();
+        Team team = left.getTeam();
         if (team != null) MinecraftServer.getTeamManager().deleteTeam(team);
     }
 
-    private void sendQuitMessage(Player left) {
-        final Component message = Component.text()
+    private void sendQuitMessage(@NotNull Player left) {
+        Component message = Component.text()
                 .append(Component.text("QUIT", NamedTextColor.RED, TextDecoration.BOLD))
                 .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
                 .append(Component.text(left.getUsername(), NamedTextColor.RED))
                 .build();
-        game.getAudience().sendMessage(message);
+        this.game.sendMessage(message);
     }
 
     private void playQuitSound() {
-        final Sound sound = Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 1F, 0.5F);
-        game.getAudience().playSound(sound);
+        Sound sound = Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 1F, 0.5F);
+        this.game.playSound(sound);
     }
 }

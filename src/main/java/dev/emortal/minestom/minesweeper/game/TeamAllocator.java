@@ -17,22 +17,22 @@ public final class TeamAllocator {
     private final Queue<TeamColor> availableColors = new ArrayDeque<>(AVAILABLE_COLORS);
 
     public void allocate(@NotNull Player player) {
-        TeamColor color = availableColors.poll();
+        TeamColor color = this.availableColors.poll();
         if (color == null) color = getRandom();
 
-        final Team team = MinecraftServer.getTeamManager().createBuilder(UUID.randomUUID().toString()).teamColor(color.color()).build();
+        Team team = MinecraftServer.getTeamManager().createBuilder(UUID.randomUUID().toString()).teamColor(color.color()).build();
         player.setTeam(team);
         player.setTag(PlayerTags.COLOR, color);
     }
 
     public void deallocate(@NotNull Player player) {
-        final TeamColor color = player.getTag(PlayerTags.COLOR);
+        TeamColor color = player.getTag(PlayerTags.COLOR);
         if (color == null) return;
 
-        availableColors.add(color);
+        this.availableColors.add(color);
     }
 
-    private static TeamColor getRandom() {
+    private static @NotNull TeamColor getRandom() {
         return AVAILABLE_COLORS.get(ThreadLocalRandom.current().nextInt(AVAILABLE_COLORS.size()));
     }
 }

@@ -26,19 +26,19 @@ public final class MapManager {
     }
 
     public @NotNull BoardMap createMap() {
-        final Board board = new Board(BoardSettings.DEFAULT);
-        return createMap(board);
+        Board board = new Board(BoardSettings.DEFAULT);
+        return this.createMap(board);
     }
 
     public @NotNull BoardMap createMap(@NotNull Board board) {
-        final Instance instance = createInstance();
-        final BoardMap map = new BoardMap(instance, MapTheme.DEFAULT, board);
-        fillBoard(map);
+        Instance instance = this.createInstance();
+        BoardMap map = new BoardMap(instance, MapTheme.DEFAULT, board);
+        this.fillBoard(map);
         return map;
     }
 
     private Instance createInstance() {
-        final Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer(FULLBRIGHT);
+        Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer(FULLBRIGHT);
         instance.setGenerator(unit -> {
             unit.modifier().fillHeight(FLOOR_HEIGHT, 65, Block.GRASS_BLOCK);
             unit.modifier().fillHeight(60, 64, Block.DIRT);
@@ -48,7 +48,7 @@ public final class MapManager {
         // Store the futures so we can use CompletableFuture#allOf
         Set<CompletableFuture<Chunk>> futures = new HashSet<>();
 
-        final int radius = 5;
+        int radius = 5;
         for (int x = -radius; x <= radius; x++) {
             for (int z = -radius; z <= radius; z++) {
                 CompletableFuture<Chunk> future = instance.loadChunk(x, z);
@@ -57,18 +57,17 @@ public final class MapManager {
         }
 
         CompletableFuture.allOf(futures.toArray(CompletableFuture[]::new)).join();
-
         return instance;
     }
 
     private void fillBoard(@NotNull BoardMap map) {
-        final BoardSettings settings = map.board().getSettings();
-        final AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
+        BoardSettings settings = map.board().getSettings();
+        AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
 
         boolean alternate = false;
         for (int x = 0; x < settings.length(); x++) {
             for (int z = 0; z < settings.width(); z++) {
-                final Block block = alternate ? map.theme().checkerAlternate() : map.theme().checkerMain();
+                Block block = alternate ? map.theme().checkerAlternate() : map.theme().checkerMain();
                 batch.setBlock(x, FLOOR_HEIGHT, z, block);
                 alternate = !alternate;
             }

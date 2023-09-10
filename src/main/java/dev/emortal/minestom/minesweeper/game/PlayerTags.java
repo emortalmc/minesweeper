@@ -5,4 +5,7 @@ import net.minestom.server.tag.Tag;
 
 public final class PlayerTags {
     public static final Tag<TeamColor> COLOR = Tag.Byte("minesweeper:color").map(TeamColor::fromId, color -> (byte) color.ordinal());
+
+    private PlayerTags() {
+    }
 }

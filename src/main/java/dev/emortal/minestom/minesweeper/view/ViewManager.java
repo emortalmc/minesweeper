@@ -12,32 +12,35 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ViewManager {
 
-    private final BoardMap map;
+    private final @NotNull BoardMap map;
 
     public ViewManager(@NotNull BoardMap map) {
         this.map = map;
     }
 
     public boolean isRevealed(int x, int y) {
-        return map.board().isRevealed(x, y);
+        return this.map.board().isRevealed(x, y);
     }
 
     public void reveal(int x, int y) {
-        final boolean mine = map.board().isMine(x, y);
+        boolean mine = this.map.board().isMine(x, y);
         if (mine) return;
 
-        map.instance().setBlock(x, MapManager.FLOOR_HEIGHT, y, map.theme().safe());
-        final int mines = map.board().get(x, y);
-        if (mines > 0) placeMap(x, y, mines);
+        this.map.instance().setBlock(x, MapManager.FLOOR_HEIGHT, y, this.map.theme().safe());
+
+        int mines = this.map.board().get(x, y);
+        if (mines > 0) {
+            this.placeMap(x, y, mines);
+        }
     }
 
     public int getUnrevealed() {
-        final BoardSettings settings = map.board().getSettings();
+        BoardSettings settings = this.map.board().getSettings();
 
         int unrevealed = 0;
         for (int x = 0; x < settings.length(); x++) {
             for (int y = 0; y < settings.width(); y++) {
-                if (!map.board().isRevealed(x, y)) unrevealed++;
+                if (!this.map.board().isRevealed(x, y)) unrevealed++;
             }
         }
 
@@ -45,36 +48,36 @@ public final class ViewManager {
     }
 
     private void placeMap(int x, int y, int mines) {
-        map.theme().revealedSquarePlacer().revealSquare(map, x, y, mines);
+        this.map.theme().revealedSquarePlacer().revealSquare(this.map, x, y, mines);
     }
 
-    public List<Vec2> revealAroundStart(int x, int y) {
-        final List<Vec2> changed = new ArrayList<>();
+    public @NotNull List<Vec2> revealAroundStart(int x, int y) {
+        List<Vec2> changed = new ArrayList<>();
         changed.add(new Vec2(x, y));
-        revealAround(changed, x, y);
+        this.revealAround(changed, x, y);
         return changed;
     }
 
-    public List<Vec2> revealAround(int x, int y) {
-        final List<Vec2> changed = new ArrayList<>();
-        revealAround(changed, x, y);
+    public @NotNull List<Vec2> revealAround(int x, int y) {
+        List<Vec2> changed = new ArrayList<>();
+        this.revealAround(changed, x, y);
         return changed;
     }
 
-    private void revealAround(List<Vec2> changed, int x, int y) {
-        final Board board = map.board();
-        for (final Direction8 direction : Direction8.values()) {
-            final int newX = x + direction.offsetX();
-            final int newY = y + direction.offsetY();
+    private void revealAround(@NotNull List<Vec2> changed, int x, int y) {
+        Board board = this.map.board();
+        for (Direction8 direction : Direction8.values()) {
+            int newX = x + direction.offsetX();
+            int newY = y + direction.offsetY();
 
-            if (isOutsideBoard(newX, newY)) continue;
-            if (isRevealed(newX, newY)) continue;
+            if (this.isOutsideBoard(newX, newY)) continue;
+            if (this.isRevealed(newX, newY)) continue;
 
             if (board.get(x, y) > 0) continue;
             board.setEmpty(newX, newY);
             changed.add(new Vec2(newX, newY));
 
-            final byte minesAround = board.getMinesAround(newX, newY);
+            byte minesAround = board.getMinesAround(newX, newY);
             if (minesAround > 0) {
                 if (board.get(x, y) > 0) continue;
                 board.set(newX, newY, minesAround);
@@ -82,12 +85,12 @@ public final class ViewManager {
                 continue;
             }
 
-            revealAround(changed, newX, newY);
+            this.revealAround(changed, newX, newY);
         }
     }
 
     private boolean isOutsideBoard(int x, int y) {
-        final BoardSettings settings = map.board().getSettings();
+        BoardSettings settings = this.map.board().getSettings();
         return x < 0 || x >= settings.length() || y < 0 || y >= settings.width();
     }
 }

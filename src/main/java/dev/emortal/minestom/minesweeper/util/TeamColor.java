@@ -23,19 +23,19 @@ public enum TeamColor {
         return VALUES[id];
     }
 
-    private final NamedTextColor color;
-    private final Block carpet;
+    private final @NotNull NamedTextColor color;
+    private final @NotNull Block carpet;
 
-    TeamColor(NamedTextColor color, Block carpet) {
+    TeamColor(@NotNull NamedTextColor color, @NotNull Block carpet) {
         this.color = color;
         this.carpet = carpet;
     }
 
     public @NotNull NamedTextColor color() {
-        return color;
+        return this.color;
     }
 
     public @NotNull Block carpet() {
-        return carpet;
+        return this.carpet;
     }
 }
