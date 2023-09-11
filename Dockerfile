@@ -5,4 +5,4 @@ WORKDIR /app
 
 COPY build/libs/*-all.jar /app/minesweeper.jar
 
-CMD ["java", "-jar", "/app/minesweeper.jar"]
+CMD ["java", "--enable-preview", "-jar", "/app/minesweeper.jar"]
