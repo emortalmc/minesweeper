@@ -17,9 +17,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.emortal.minestom:game-sdk:bf1bede")
-
-//    implementation("net.kyori:adventure-text-minimessage:4.13.0")
+    implementation("dev.emortal.minestom:game-sdk:c74da89")
 }
 
 java {
