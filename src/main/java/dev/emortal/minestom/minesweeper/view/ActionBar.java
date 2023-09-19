@@ -22,7 +22,10 @@ public final class ActionBar {
         this.startTime = System.currentTimeMillis();
 
         // Keep action bar shown
-        this.instance.scheduler().buildTask(this::update).repeat(TaskSchedule.tick(20)).schedule();
+        this.instance.scheduler()
+                .buildTask(this::update)
+                .repeat(TaskSchedule.tick(20))
+                .schedule();
     }
 
     public void incrementFlags() {
@@ -31,7 +34,8 @@ public final class ActionBar {
     }
 
     public void update() {
-        Duration duration = Duration.ofMillis(System.currentTimeMillis() - this.startTime);
+        long now = System.currentTimeMillis();
+        Duration duration = Duration.ofMillis(now - this.startTime);
 
         // ☠ {mines} MINES | ⚑ {flags} FLAGS | ⌚ 1m 23s
         this.instance.sendActionBar(Component.text()

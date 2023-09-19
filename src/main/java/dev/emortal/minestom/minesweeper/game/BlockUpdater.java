@@ -57,7 +57,7 @@ public final class BlockUpdater {
         }
 
         @Override
-        public TaskSchedule get() {
+        public @NotNull TaskSchedule get() {
             this.playUpdateSound();
 
             for (int j = 0; j < 5; j++) {

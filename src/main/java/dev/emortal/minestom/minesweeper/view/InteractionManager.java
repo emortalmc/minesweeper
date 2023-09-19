@@ -9,6 +9,8 @@ import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import java.util.List;
+import java.util.Locale;
+
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -49,13 +51,16 @@ public final class InteractionManager {
             return;
         }
 
+        Instance instance = event.getInstance();
         Player player = event.getPlayer();
-        int x = event.getBlockPosition().blockX();
-        int y = event.getBlockPosition().blockY();
-        int z = event.getBlockPosition().blockZ();
+
+        Point pos = event.getBlockPosition();
+        int x = pos.blockX();
+        int y = pos.blockY();
+        int z = pos.blockZ();
 
         if (this.isOutsideBoard(x, y, z)) return;
-        if (event.getInstance().getBlock(x, y + 1, z).name().endsWith("carpet")) return;
+        if (this.hasCarpetAbove(instance, x, y, z)) return;
         if (!player.getItemInMainHand().isAir()) return;
 
         Board board = this.map.board();
@@ -64,49 +69,17 @@ public final class InteractionManager {
             return;
         }
 
-        byte minesAround = board.getMinesAround(x, z);
-        if (board.get(x, z) != minesAround) {
-            board.set(x, z, minesAround);
-            this.viewManager.reveal(x, z);
-            this.playRevealSound(player);
-        }
-
-        List<Vec2> blocksToChange;
-        if (this.firstClick) {
-            this.firstClick = false;
-            board.populateWithMines(x, z);
-            blocksToChange = this.viewManager.revealAroundStart(x, z);
-        } else {
-            blocksToChange = this.viewManager.revealAround(x, z);
-        }
+        this.revealMinesOnBoard(player, board, x, z);
+        List<Vec2> blocksToChange = this.revealBlocks(board, x, z);
 
         if (this.viewManager.getUnrevealed() <= 0) {
-            this.playWinSounds(player);
-            this.game.win();
-            this.finished = true;
+            this.win(player);
             return;
         }
 
         if (blocksToChange.isEmpty()) return;
         this.blockUpdater.updateBlocks(blocksToChange);
         this.actionBar.update();
-    }
-
-    private void loseGame(@NotNull Player player, int x, int z) {
-        Component lossMessage = Component.text()
-                .append(Component.text(player.getUsername(), NamedTextColor.RED))
-                .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY))
-                .build();
-
-        for (Player gamePlayer : this.game.getPlayers()) {
-            this.playMineSound(gamePlayer);
-            gamePlayer.sendMessage(lossMessage);
-        }
-
-        this.playMineSound(player);
-        this.blockUpdater.revealMines(x, z);
-        this.game.lose();
-        this.finished = true;
     }
 
     public void onClick(@NotNull PlayerBlockInteractEvent event) {
@@ -126,7 +99,7 @@ public final class InteractionManager {
 
         if (event.getHand() != Player.Hand.MAIN) return;
 
-        if (block.name().endsWith("carpet")) {
+        if (this.isCarpet(block)) {
             instance.setBlock(pos, Block.AIR);
             player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
             return;
@@ -142,6 +115,52 @@ public final class InteractionManager {
         this.actionBar.incrementFlags();
     }
 
+    private boolean isCarpet(@NotNull Block block) {
+        return block.name().toLowerCase(Locale.ROOT).endsWith("carpet");
+    }
+
+    private void revealMinesOnBoard(@NotNull Player player, @NotNull Board board, int x, int y) {
+        byte minesAround = board.getMinesAround(x, y);
+        if (board.get(x, y) == minesAround) return;
+
+        board.set(x, y, minesAround);
+        this.viewManager.reveal(x, y);
+        this.playRevealSound(player);
+    }
+
+    private @NotNull List<Vec2> revealBlocks(@NotNull Board board, int x, int y) {
+        if (this.firstClick) {
+            this.firstClick = false;
+            board.populateWithMines(x, y);
+            return this.viewManager.revealAroundStart(x, y);
+        } else {
+            return this.viewManager.revealAround(x, y);
+        }
+    }
+
+    private void win(@NotNull Player player) {
+        this.playWinSounds(player);
+        this.game.win();
+        this.finished = true;
+    }
+
+    private void loseGame(@NotNull Player player, int x, int z) {
+        Component lossMessage = Component.text()
+                .append(Component.text(player.getUsername(), NamedTextColor.RED))
+                .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY))
+                .build();
+
+        for (Player gamePlayer : this.game.getPlayers()) {
+            this.playMineSound(gamePlayer);
+            gamePlayer.sendMessage(lossMessage);
+        }
+
+        this.playMineSound(player);
+        this.blockUpdater.revealMines(x, z);
+        this.game.lose();
+        this.finished = true;
+    }
+
     private boolean isInvalidFlag(@NotNull Instance instance, int x, int y, int z) {
         return this.isOutsideBoard(x, y, z) || // Out of bounds
                 this.hasCarpetAbove(instance, x, y, z) || // Somehow clicked a block with carpet on top, cannot flag
@@ -149,7 +168,7 @@ public final class InteractionManager {
     }
 
     private boolean hasCarpetAbove(@NotNull Instance instance, int x, int y, int z) {
-        return instance.getBlock(x, y + 1, z).name().endsWith("carpet");
+        return this.isCarpet(instance.getBlock(x, y + 1, z));
     }
 
     private boolean isOutsideBoard(int x, int y, int z) {

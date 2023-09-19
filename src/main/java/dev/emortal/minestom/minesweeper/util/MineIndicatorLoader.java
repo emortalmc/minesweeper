@@ -39,7 +39,9 @@ public final class MineIndicatorLoader {
 
     private static @NotNull BufferedImage loadImage(@NotNull String path) {
         URL dataUrl = Thread.currentThread().getContextClassLoader().getResource(path);
-        if (dataUrl == null) throw new RuntimeException("Could not find resource " + path);
+        if (dataUrl == null) {
+            throw new RuntimeException("Could not find resource " + path);
+        }
 
         try {
             return ImageIO.read(dataUrl);

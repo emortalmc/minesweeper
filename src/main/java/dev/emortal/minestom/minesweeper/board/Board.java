@@ -8,16 +8,21 @@ import org.jetbrains.annotations.NotNull;
 public final class Board {
 
     private final @NotNull BoardSettings settings;
-
-    private final byte[][] board;
+    private final byte[][] grid;
 
     public Board(@NotNull BoardSettings settings) {
         this.settings = settings;
+        this.grid = createEmptyGrid(settings);
+    }
 
-        this.board = new byte[settings.length()][settings.width()];
-        for (byte[] row : this.board) {
+    private static byte[][] createEmptyGrid(@NotNull BoardSettings settings) {
+        byte[][] grid = new byte[settings.length()][settings.width()];
+
+        for (byte[] row : grid) {
             Arrays.fill(row, SquareType.UNREVEALED);
         }
+
+        return grid;
     }
 
     public @NotNull BoardSettings getSettings() {
@@ -33,11 +38,11 @@ public final class Board {
     }
 
     public byte get(int x, int y) {
-        return this.board[x][y];
+        return this.grid[x][y];
     }
 
     public void set(int x, int y, byte value) {
-        this.board[x][y] = value;
+        this.grid[x][y] = value;
     }
 
     public void setEmpty(int x, int y) {

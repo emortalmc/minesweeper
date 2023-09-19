@@ -18,7 +18,9 @@ public final class TeamAllocator {
 
     public void allocate(@NotNull Player player) {
         TeamColor color = this.availableColors.poll();
-        if (color == null) color = getRandom();
+        if (color == null) {
+            color = getRandom();
+        }
 
         Team team = MinecraftServer.getTeamManager().createBuilder(UUID.randomUUID().toString()).teamColor(color.color()).build();
         player.setTeam(team);
