@@ -17,23 +17,16 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.emortal.minestom:game-sdk:abecd78")
+    implementation("dev.emortal.minestom:game-sdk:3e4a79a")
 }
 
 java {
     toolchain {
-        languageVersion.set(JavaLanguageVersion.of(20))
+        languageVersion.set(JavaLanguageVersion.of(21))
     }
 }
 
 tasks {
-    compileJava {
-        options.compilerArgs.addAll(listOf(
-            "--release", "20",
-            "--enable-preview"
-        ))
-    }
-
     shadowJar {
         mergeServiceFiles()
 
