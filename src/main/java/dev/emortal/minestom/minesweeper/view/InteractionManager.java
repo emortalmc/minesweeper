@@ -16,10 +16,15 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
+import net.minestom.server.event.inventory.InventoryItemChangeEvent;
+import net.minestom.server.event.inventory.PlayerInventoryItemChangeEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
+import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
+import net.minestom.server.inventory.AbstractInventory;
+import net.minestom.server.item.ItemStack;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 
@@ -43,13 +48,13 @@ public final class InteractionManager {
 
         game.getEventNode().addListener(PlayerBlockBreakEvent.class, this::onBreak);
         game.getEventNode().addListener(PlayerBlockInteractEvent.class, this::onClick);
+        game.getEventNode().addListener(PlayerBlockPlaceEvent.class, event -> event.setCancelled(true));
+        game.getEventNode().addListener(InventoryItemChangeEvent.class, this::onItemChange);
     }
 
-    public void onBreak(@NotNull PlayerBlockBreakEvent event) {
-        if (this.finished) {
-            event.setCancelled(true);
-            return;
-        }
+    private void onBreak(@NotNull PlayerBlockBreakEvent event) {
+        event.setCancelled(true); // We never actually want to break the block
+        if (this.finished) return;
 
         Instance instance = event.getInstance();
         Player player = event.getPlayer();
@@ -82,11 +87,11 @@ public final class InteractionManager {
         this.actionBar.update();
     }
 
-    public void onClick(@NotNull PlayerBlockInteractEvent event) {
-        if (this.finished) {
-            event.setCancelled(true);
-            return;
-        }
+    private void onClick(@NotNull PlayerBlockInteractEvent event) {
+        // We place and remove the carpet ourselves
+        // This makes the logic significantly easier, rather than having to cancel everywhere separately, and risking missing something
+        event.setCancelled(true);
+        if (this.finished) return;
 
         Player player = event.getPlayer();
         Instance instance = event.getInstance();
@@ -98,21 +103,34 @@ public final class InteractionManager {
         int z = pos.blockZ();
 
         if (event.getHand() != Player.Hand.MAIN) return;
+        if (!player.getItemInMainHand().isAir()) {
+            // This avoids players being able to place anything other than the carpets that get placed when they click with an empty hand
+            return;
+        }
 
         if (this.isCarpet(block)) {
+            // If the block is already carpet (a flag), we want to remove the flag
             instance.setBlock(pos, Block.AIR);
             player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
             return;
         }
 
-        if (this.isInvalidFlag(instance, x, y, z)) {
-            event.setCancelled(true);
-            return;
-        }
+        if (this.isInvalidFlag(instance, x, y, z)) return;
 
         instance.setBlock(x, y + 1, z, player.getTag(PlayerTags.COLOR).carpet());
         player.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_FLAP, Sound.Source.MASTER, 0.6F, 2F));
         this.actionBar.incrementFlags();
+    }
+
+    private void onItemChange(@NotNull InventoryItemChangeEvent event) {
+        // This is used to stop players from being able to take items out of the creative inventory
+        AbstractInventory inventory;
+        if (event instanceof PlayerInventoryItemChangeEvent playerEvent && playerEvent.getInventory() == null) {
+            inventory = playerEvent.getPlayer().getInventory();
+        } else {
+            inventory = event.getInventory();
+        }
+        inventory.setItemStack(event.getSlot(), ItemStack.AIR);
     }
 
     private boolean isCarpet(@NotNull Block block) {
