@@ -112,6 +112,7 @@ public final class InteractionManager {
             // If the block is already carpet (a flag), we want to remove the flag
             instance.setBlock(pos, Block.AIR);
             player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
+            this.actionBar.decrementFlags();
             return;
         }
 

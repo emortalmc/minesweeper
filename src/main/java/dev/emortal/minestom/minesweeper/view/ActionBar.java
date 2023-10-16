@@ -33,6 +33,11 @@ public final class ActionBar {
         this.update();
     }
 
+    public void decrementFlags() {
+        this.flags--;
+        this.update();
+    }
+
     public void update() {
         long now = System.currentTimeMillis();
         Duration duration = Duration.ofMillis(now - this.startTime);
