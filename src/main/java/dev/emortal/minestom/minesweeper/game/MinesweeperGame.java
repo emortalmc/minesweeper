@@ -2,9 +2,11 @@ package dev.emortal.minestom.minesweeper.game;
 
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
+import dev.emortal.minestom.gamesdk.util.GameWinLoseMessages;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
+import dev.emortal.minestom.minesweeper.util.MinesweeperLoseMessages;
 import dev.emortal.minestom.minesweeper.view.InteractionManager;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -18,6 +20,8 @@ import net.minestom.server.event.player.PlayerSpawnEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
+
+import java.time.Duration;
 
 public final class MinesweeperGame extends Game {
 
@@ -67,7 +71,8 @@ public final class MinesweeperGame extends Game {
     public void win() {
         Title title = Title.title(
                 Component.text("VICTORY!", NamedTextColor.GOLD, TextDecoration.BOLD),
-                Component.text("Bardy best dev", NamedTextColor.GRAY)
+                Component.text(GameWinLoseMessages.randomVictory(), NamedTextColor.GRAY),
+                Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(4))
         );
         for (Player player : this.getPlayers()) {
             player.showTitle(title);
@@ -79,7 +84,8 @@ public final class MinesweeperGame extends Game {
     public void lose() {
         Title title = Title.title(
                 Component.text("DEFEAT!", NamedTextColor.RED, TextDecoration.BOLD),
-                Component.text("Kotlin user", NamedTextColor.GRAY)
+                Component.text(MinesweeperLoseMessages.random(), NamedTextColor.GRAY),
+                Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(4))
         );
         for (Player player : this.getPlayers()) {
             player.showTitle(title);
