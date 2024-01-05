@@ -1,7 +1,6 @@
 package dev.emortal.minestom.minesweeper.map;
 
-import dev.emortal.minestom.minesweeper.board.Board;
-import dev.emortal.minestom.minesweeper.board.BoardSettings;
+import dev.emortal.minestom.minesweeper.board.BoardDimensions;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.batch.AbsoluteBlockBatch;
@@ -15,19 +14,18 @@ public final class MapManager {
     private final @NotNull Instance rootInstance = InstanceCreator.createRoot();
 
     public @NotNull BoardMap createMap() {
-        Board board = new Board(BoardSettings.DEFAULT);
-        return this.createMap(board);
+        return this.createMap(BoardDimensions.DEFAULT);
     }
 
-    public @NotNull BoardMap createMap(@NotNull Board board) {
+    public @NotNull BoardMap createMap(@NotNull BoardDimensions settings) {
         Instance instance = InstanceCreator.createCopy(this.rootInstance);
-        BoardMap map = new BoardMap(instance, MapTheme.DEFAULT, board);
+        BoardMap map = new BoardMap(instance, MapTheme.DEFAULT, settings);
         this.fillBoard(map);
         return map;
     }
 
     private void fillBoard(@NotNull BoardMap map) {
-        BoardSettings settings = map.board().getSettings();
+        BoardDimensions settings = map.dimensions();
         AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
 
         boolean alternate = false;

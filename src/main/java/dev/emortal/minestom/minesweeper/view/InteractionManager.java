@@ -1,7 +1,7 @@
 package dev.emortal.minestom.minesweeper.view;
 
 import dev.emortal.minestom.minesweeper.board.Board;
-import dev.emortal.minestom.minesweeper.board.BoardSettings;
+import dev.emortal.minestom.minesweeper.board.BoardDimensions;
 import dev.emortal.minestom.minesweeper.game.BlockUpdater;
 import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
 import dev.emortal.minestom.minesweeper.game.PlayerTags;
@@ -31,7 +31,6 @@ import org.jetbrains.annotations.NotNull;
 public final class InteractionManager {
 
     private final @NotNull MinesweeperGame game;
-    private final @NotNull BoardMap map;
     private final @NotNull ViewManager viewManager;
     private final @NotNull BlockUpdater blockUpdater;
     private final @NotNull ActionBar actionBar;
@@ -41,15 +40,18 @@ public final class InteractionManager {
 
     public InteractionManager(@NotNull MinesweeperGame game, @NotNull BoardMap map) {
         this.game = game;
-        this.map = map;
         this.viewManager = new ViewManager(map);
-        this.blockUpdater = new BlockUpdater(map, this.viewManager);
-        this.actionBar = new ActionBar(map.instance(), map.board().getSettings().mines());
+        this.blockUpdater = new BlockUpdater(game, map, this.viewManager);
+        this.actionBar = new ActionBar(map.instance(), map.dimensions().mines());
 
         game.getEventNode().addListener(PlayerBlockBreakEvent.class, this::onBreak);
         game.getEventNode().addListener(PlayerBlockInteractEvent.class, this::onClick);
         game.getEventNode().addListener(PlayerBlockPlaceEvent.class, event -> event.setCancelled(true));
         game.getEventNode().addListener(InventoryItemChangeEvent.class, this::onItemChange);
+    }
+
+    public void setMines(int mines) {
+        this.actionBar.setMines(mines);
     }
 
     private void onBreak(@NotNull PlayerBlockBreakEvent event) {
@@ -68,7 +70,7 @@ public final class InteractionManager {
         if (this.hasCarpetAbove(instance, x, y, z)) return;
         if (!player.getItemInMainHand().isAir()) return;
 
-        Board board = this.map.board();
+        Board board = this.game.getBoard();
         if (board.isMine(x, z)) {
             this.loseGame(player, x, z);
             return;
@@ -183,7 +185,7 @@ public final class InteractionManager {
     private boolean isInvalidFlag(@NotNull Instance instance, int x, int y, int z) {
         return this.isOutsideBoard(x, y, z) || // Out of bounds
                 this.hasCarpetAbove(instance, x, y, z) || // Somehow clicked a block with carpet on top, cannot flag
-                (this.viewManager.isRevealed(x, z) && !this.map.board().isMine(x, z)); // Is revealed and not a mine
+                (this.viewManager.isRevealed(x, z) && !this.game.getBoard().isMine(x, z)); // Is revealed and not a mine
     }
 
     private boolean hasCarpetAbove(@NotNull Instance instance, int x, int y, int z) {
@@ -191,7 +193,7 @@ public final class InteractionManager {
     }
 
     private boolean isOutsideBoard(int x, int y, int z) {
-        BoardSettings settings = this.map.board().getSettings();
+        BoardDimensions settings = this.map.dimensions();
         return y != MapManager.FLOOR_HEIGHT || x < 0 || x >= settings.length() || z < 0 || z >= settings.width();
     }
 

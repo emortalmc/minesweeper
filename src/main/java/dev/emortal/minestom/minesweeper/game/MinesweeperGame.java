@@ -3,6 +3,7 @@ package dev.emortal.minestom.minesweeper.game;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
 import dev.emortal.minestom.gamesdk.util.GameWinLoseMessages;
+import dev.emortal.minestom.minesweeper.board.Board;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
@@ -26,6 +27,8 @@ import java.time.Duration;
 public final class MinesweeperGame extends Game {
 
     private final @NotNull BoardMap map;
+    private final @NotNull InteractionManager interactionManager;
+    private final @NotNull Board board;
 
     private final TeamAllocator teamAllocator = new TeamAllocator();
     private final PlayerDisconnectHandler disconnectHandler = new PlayerDisconnectHandler(this, this.teamAllocator);
@@ -34,7 +37,8 @@ public final class MinesweeperGame extends Game {
         super(creationInfo);
 
         this.map = map;
-        new InteractionManager(this, map);
+        this.interactionManager = new InteractionManager(this, map);
+        this.board = new Board(map.dimensions());
 
         this.getEventNode().addListener(PlayerBlockBreakEvent.class, event -> event.setCancelled(true));
         this.getEventNode().addListener(PlayerSpawnEvent.class, event -> MineIndicatorLoader.registerForPlayer(event.getPlayer()));
@@ -92,5 +96,17 @@ public final class MinesweeperGame extends Game {
         }
 
         this.map.instance().scheduler().buildTask(this::finish).delay(TaskSchedule.seconds(6)).schedule();
+    }
+
+    public @NotNull Board getBoard() {
+        return this.board;
+    }
+
+    public boolean setMines(int mines) {
+        boolean success = this.board.setMines(mines);
+        if (success) {
+            this.interactionManager.setMines(mines);
+        }
+        return success;
     }
 }

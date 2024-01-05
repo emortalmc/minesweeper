@@ -1,7 +1,8 @@
 package dev.emortal.minestom.minesweeper.view;
 
 import dev.emortal.minestom.minesweeper.board.Board;
-import dev.emortal.minestom.minesweeper.board.BoardSettings;
+import dev.emortal.minestom.minesweeper.board.BoardDimensions;
+import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Direction8;
@@ -12,35 +13,37 @@ import org.jetbrains.annotations.NotNull;
 
 public final class ViewManager {
 
+    private final @NotNull MinesweeperGame game;
     private final @NotNull BoardMap map;
 
-    public ViewManager(@NotNull BoardMap map) {
+    public ViewManager(@NotNull MinesweeperGame game, @NotNull BoardMap map) {
+        this.game = game;
         this.map = map;
     }
 
     public boolean isRevealed(int x, int y) {
-        return this.map.board().isRevealed(x, y);
+        return this.game.getBoard().isRevealed(x, y);
     }
 
     public void reveal(int x, int y) {
-        boolean mine = this.map.board().isMine(x, y);
+        boolean mine = this.game.getBoard().isMine(x, y);
         if (mine) return;
 
         this.map.instance().setBlock(x, MapManager.FLOOR_HEIGHT, y, this.map.theme().safe());
 
-        int mines = this.map.board().get(x, y);
+        int mines = this.game.getBoard().get(x, y);
         if (mines > 0) {
             this.placeMap(x, y, mines);
         }
     }
 
     public int getUnrevealed() {
-        BoardSettings settings = this.map.board().getSettings();
+        BoardDimensions dimensions = this.map.dimensions();
 
         int unrevealed = 0;
-        for (int x = 0; x < settings.length(); x++) {
-            for (int y = 0; y < settings.width(); y++) {
-                if (!this.map.board().isRevealed(x, y)) unrevealed++;
+        for (int x = 0; x < dimensions.length(); x++) {
+            for (int y = 0; y < dimensions.width(); y++) {
+                if (!this.game.getBoard().isRevealed(x, y)) unrevealed++;
             }
         }
 
@@ -65,7 +68,7 @@ public final class ViewManager {
     }
 
     private void revealAround(@NotNull List<Vec2> changed, int x, int y) {
-        Board board = this.map.board();
+        Board board = this.game.getBoard();
         for (Direction8 direction : Direction8.values()) {
             int newX = x + direction.offsetX();
             int newY = y + direction.offsetY();
@@ -90,7 +93,7 @@ public final class ViewManager {
     }
 
     private boolean isOutsideBoard(int x, int y) {
-        BoardSettings settings = this.map.board().getSettings();
-        return x < 0 || x >= settings.length() || y < 0 || y >= settings.width();
+        BoardDimensions dimensions = this.map.dimensions();
+        return x < 0 || x >= dimensions.length() || y < 0 || y >= dimensions.width();
     }
 }

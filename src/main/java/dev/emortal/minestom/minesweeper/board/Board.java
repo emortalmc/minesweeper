@@ -6,17 +6,22 @@ import java.util.concurrent.ThreadLocalRandom;
 import org.jetbrains.annotations.NotNull;
 
 public final class Board {
+    public static final int DEFAULT_MINES = 170;
 
-    private final @NotNull BoardSettings settings;
+    private final @NotNull BoardDimensions dimensions;
     private final byte[][] grid;
 
-    public Board(@NotNull BoardSettings settings) {
-        this.settings = settings;
+    private int mines;
+    private boolean minesPopulated;
+
+    public Board(@NotNull BoardDimensions settings) {
+        this.dimensions = settings;
+        this.mines = DEFAULT_MINES;
         this.grid = createEmptyGrid(settings);
     }
 
-    private static byte[][] createEmptyGrid(@NotNull BoardSettings settings) {
-        byte[][] grid = new byte[settings.length()][settings.width()];
+    private static byte[][] createEmptyGrid(@NotNull BoardDimensions dimensions) {
+        byte[][] grid = new byte[dimensions.length()][dimensions.width()];
 
         for (byte[] row : grid) {
             Arrays.fill(row, SquareType.UNREVEALED);
@@ -25,8 +30,15 @@ public final class Board {
         return grid;
     }
 
-    public @NotNull BoardSettings getSettings() {
-        return this.settings;
+    public int getMines() {
+        return this.mines;
+    }
+
+    public boolean setMines(int mines) {
+        if (this.minesPopulated) return false;
+
+        this.mines = mines;
+        return true;
     }
 
     public boolean isMine(int x, int y) {
@@ -70,14 +82,16 @@ public final class Board {
     }
 
     private boolean isOutOfBounds(int x, int y) {
-        return x < 0 || x >= this.settings.length() || y < 0 || y >= this.settings.width();
+        return x < 0 || x >= this.dimensions.length() || y < 0 || y >= this.dimensions.width();
     }
 
     public void populateWithMines(int clickedX, int clickedY) {
-        int length = this.settings.length();
-        int width = this.settings.width();
+        this.minesPopulated = true;
 
-        int mines = this.settings.mines();
+        int length = this.dimensions.length();
+        int width = this.dimensions.width();
+
+        int mines = this.mines;
         while (mines > 0) {
             int x = getRandom(length);
             int y = getRandom(width);

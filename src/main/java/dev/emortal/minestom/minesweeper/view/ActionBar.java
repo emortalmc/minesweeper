@@ -11,9 +11,9 @@ import java.time.Duration;
 public final class ActionBar {
 
     private final @NotNull Instance instance;
-    private final int mines;
     private final long startTime;
 
+    private int mines;
     private int flags;
 
     public ActionBar(@NotNull Instance instance, int mines) {
@@ -26,6 +26,10 @@ public final class ActionBar {
                 .buildTask(this::update)
                 .repeat(TaskSchedule.tick(20))
                 .schedule();
+    }
+
+    public void setMines(int mines) {
+        this.mines = mines;
     }
 
     public void incrementFlags() {

@@ -1,6 +1,6 @@
 package dev.emortal.minestom.minesweeper.game;
 
-import dev.emortal.minestom.minesweeper.board.BoardSettings;
+import dev.emortal.minestom.minesweeper.board.BoardDimensions;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
@@ -16,10 +16,12 @@ import org.jetbrains.annotations.NotNull;
 
 public final class BlockUpdater {
 
+    private final @NotNull MinesweeperGame game;
     private final @NotNull BoardMap map;
     private final @NotNull ViewManager viewManager;
 
-    public BlockUpdater(@NotNull BoardMap map, @NotNull ViewManager viewManager) {
+    public BlockUpdater(@NotNull MinesweeperGame game, @NotNull BoardMap map, @NotNull ViewManager viewManager) {
+        this.game = game;
         this.map = map;
         this.viewManager = viewManager;
     }
@@ -29,12 +31,12 @@ public final class BlockUpdater {
     }
 
     public void revealMines(int clickedX, int clickedY) {
-        BoardSettings settings = this.map.board().getSettings();
+        BoardDimensions settings = this.map.dimensions();
         AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
 
         for (int x = 0; x < settings.length(); x++) {
             for (int y = 0; y < settings.width(); y++) {
-                if (!this.map.board().isMine(x, y)) continue;
+                if (!this.game.getBoard().isMine(x, y)) continue;
                 batch.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.map.theme().mine());
             }
         }
