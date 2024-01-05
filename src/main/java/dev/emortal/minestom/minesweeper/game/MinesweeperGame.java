@@ -64,7 +64,7 @@ public final class MinesweeperGame extends Game {
     }
 
     @Override
-    public @NotNull Instance getSpawningInstance() {
+    public @NotNull Instance getSpawningInstance(@NotNull Player player) {
         return this.map.instance();
     }
 
