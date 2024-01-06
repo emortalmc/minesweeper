@@ -32,7 +32,7 @@ public class MinesCommand extends Command {
                 return;
             }
 
-            boolean success = game.setMines(mineCount);
+            boolean success = game.getBoard().setMines(mineCount);
             if (success) {
                 sender.sendMessage(Component.text("Set mines to " + mineCount, NamedTextColor.GREEN));
             } else {

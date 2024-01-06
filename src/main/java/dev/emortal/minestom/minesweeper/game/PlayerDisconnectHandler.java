@@ -25,10 +25,6 @@ public final class PlayerDisconnectHandler {
 
         this.sendQuitMessage(left);
         this.playQuitSound();
-
-        if (this.game.getPlayers().isEmpty()) {
-            this.game.finish();
-        }
     }
 
     private void removeFromTeam(@NotNull Player left) {

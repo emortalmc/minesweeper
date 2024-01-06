@@ -101,12 +101,4 @@ public final class MinesweeperGame extends Game {
     public @NotNull Board getBoard() {
         return this.board;
     }
-
-    public boolean setMines(int mines) {
-        boolean success = this.board.setMines(mines);
-        if (success) {
-            this.interactionManager.setMines(mines);
-        }
-        return success;
-    }
 }

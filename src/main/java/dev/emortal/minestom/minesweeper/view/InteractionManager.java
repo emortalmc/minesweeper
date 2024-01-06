@@ -31,6 +31,7 @@ import org.jetbrains.annotations.NotNull;
 public final class InteractionManager {
 
     private final @NotNull MinesweeperGame game;
+    private final @NotNull BoardMap map;
     private final @NotNull ViewManager viewManager;
     private final @NotNull BlockUpdater blockUpdater;
     private final @NotNull ActionBar actionBar;
@@ -40,18 +41,15 @@ public final class InteractionManager {
 
     public InteractionManager(@NotNull MinesweeperGame game, @NotNull BoardMap map) {
         this.game = game;
-        this.viewManager = new ViewManager(map);
+        this.map = map;
+        this.viewManager = new ViewManager(game, map);
         this.blockUpdater = new BlockUpdater(game, map, this.viewManager);
-        this.actionBar = new ActionBar(map.instance(), map.dimensions().mines());
+        this.actionBar = new ActionBar(game, map.instance());
 
         game.getEventNode().addListener(PlayerBlockBreakEvent.class, this::onBreak);
         game.getEventNode().addListener(PlayerBlockInteractEvent.class, this::onClick);
         game.getEventNode().addListener(PlayerBlockPlaceEvent.class, event -> event.setCancelled(true));
         game.getEventNode().addListener(InventoryItemChangeEvent.class, this::onItemChange);
-    }
-
-    public void setMines(int mines) {
-        this.actionBar.setMines(mines);
     }
 
     private void onBreak(@NotNull PlayerBlockBreakEvent event) {
@@ -193,8 +191,8 @@ public final class InteractionManager {
     }
 
     private boolean isOutsideBoard(int x, int y, int z) {
-        BoardDimensions settings = this.map.dimensions();
-        return y != MapManager.FLOOR_HEIGHT || x < 0 || x >= settings.length() || z < 0 || z >= settings.width();
+        BoardDimensions dimensions = this.map.dimensions();
+        return y != MapManager.FLOOR_HEIGHT || x < 0 || x >= dimensions.length() || z < 0 || z >= dimensions.width();
     }
 
     private void playRevealSound(@NotNull Player player) {

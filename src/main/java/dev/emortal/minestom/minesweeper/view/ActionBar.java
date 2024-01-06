@@ -1,5 +1,6 @@
 package dev.emortal.minestom.minesweeper.view;
 
+import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.instance.Instance;
@@ -10,15 +11,15 @@ import java.time.Duration;
 
 public final class ActionBar {
 
+    private final @NotNull MinesweeperGame game;
     private final @NotNull Instance instance;
     private final long startTime;
 
-    private int mines;
     private int flags;
 
-    public ActionBar(@NotNull Instance instance, int mines) {
+    public ActionBar(@NotNull MinesweeperGame game, @NotNull Instance instance) {
+        this.game = game;
         this.instance = instance;
-        this.mines = mines;
         this.startTime = System.currentTimeMillis();
 
         // Keep action bar shown
@@ -28,8 +29,8 @@ public final class ActionBar {
                 .schedule();
     }
 
-    public void setMines(int mines) {
-        this.mines = mines;
+    private int getMines() {
+        return this.game.getBoard().getMines();
     }
 
     public void incrementFlags() {
@@ -49,7 +50,7 @@ public final class ActionBar {
         // ☠ {mines} MINES | ⚑ {flags} FLAGS | ⌚ 1m 23s
         this.instance.sendActionBar(Component.text()
                 .append(Component.text("☠ ", NamedTextColor.RED))
-                .append(Component.text(this.mines, NamedTextColor.RED))
+                .append(Component.text(this.getMines(), NamedTextColor.RED))
                 .append(Component.text(" MINES", NamedTextColor.RED))
                 .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
                 .append(Component.text("⚑ ", NamedTextColor.GREEN))
