@@ -1,4 +1,4 @@
-FROM --platform=$TARGETPLATFORM eclipse-temurin:21-jre
+FROM --platform=$TARGETPLATFORM eclipse-temurin:21-jre-alpine
 
 RUN mkdir /app
 WORKDIR /app
