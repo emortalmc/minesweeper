@@ -8,7 +8,7 @@ import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
 
 public final class Main {
     private static final int MIN_PLAYERS = 1;
-    private static final int MAX_GAMES = 5;
+    private static final int MAX_GAMES = 10;
 
     public static void main(String[] args) {
         MineIndicatorLoader.loadAll();
