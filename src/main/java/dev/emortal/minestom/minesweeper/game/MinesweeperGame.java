@@ -1,7 +1,9 @@
 package dev.emortal.minestom.minesweeper.game;
 
+import dev.emortal.minestom.core.utils.KurushimiMinestomUtils;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
+import dev.emortal.minestom.gamesdk.game.GameFinishedEvent;
 import dev.emortal.minestom.gamesdk.util.GameWinLoseMessages;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
@@ -72,13 +74,13 @@ public final class MinesweeperGame extends Game {
         Title title = Title.title(
                 Component.text("VICTORY!", NamedTextColor.GOLD, TextDecoration.BOLD),
                 Component.text(GameWinLoseMessages.randomVictory(), NamedTextColor.GRAY),
-                Title.Times.times(Duration.ZERO, Duration.ofSeconds(2), Duration.ofSeconds(4))
+                Title.Times.times(Duration.ZERO, Duration.ofSeconds(3), Duration.ofSeconds(6))
         );
         for (Player player : this.getPlayers()) {
             player.showTitle(title);
         }
 
-        this.map.instance().scheduler().buildTask(this::finish).delay(TaskSchedule.seconds(6)).schedule();
+        this.map.instance().scheduler().buildTask(this::finish).delay(TaskSchedule.seconds(8)).schedule();
     }
 
     public void lose() {
@@ -91,6 +93,6 @@ public final class MinesweeperGame extends Game {
             player.showTitle(title);
         }
 
-        this.map.instance().scheduler().buildTask(this::finish).delay(TaskSchedule.seconds(6)).schedule();
+        this.map.instance().scheduler().buildTask(this::finish).delay(TaskSchedule.seconds(4)).schedule();
     }
 }

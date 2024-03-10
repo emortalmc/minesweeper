@@ -19,6 +19,7 @@ public final class Main {
             return GameSdkConfig.builder()
                     .minPlayers(MIN_PLAYERS)
                     .maxGames(MAX_GAMES)
+                    .finishBehaviour(GameSdkConfig.FinishBehaviour.REQUEUE)
                     .gameCreator(info -> new MinesweeperGame(info, mapManager.createMap()))
                     .build();
         });
