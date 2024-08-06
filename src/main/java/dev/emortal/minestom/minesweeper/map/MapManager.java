@@ -12,15 +12,13 @@ public final class MapManager {
     public static final int FLOOR_HEIGHT = 64;
     public static final Pos SPAWN_POSITION = new Pos(0.5F, FLOOR_HEIGHT + 1, 0.5F, -45F, 0F);
 
-    private final @NotNull Instance rootInstance = InstanceCreator.createRoot();
-
     public @NotNull BoardMap createMap() {
         Board board = new Board(BoardSettings.DEFAULT);
         return this.createMap(board);
     }
 
     public @NotNull BoardMap createMap(@NotNull Board board) {
-        Instance instance = InstanceCreator.createCopy(this.rootInstance);
+        Instance instance = InstanceCreator.createWorld();
         BoardMap map = new BoardMap(instance, MapTheme.DEFAULT, board);
         this.fillBoard(map);
         return map;

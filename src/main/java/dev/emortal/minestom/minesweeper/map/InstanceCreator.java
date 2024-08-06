@@ -1,12 +1,10 @@
 package dev.emortal.minestom.minesweeper.map;
 
-import dev.emortal.minestom.minesweeper.util.ChunkCopyingChunkLoader;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.instance.InstanceContainer;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.utils.NamespaceID;
+import net.minestom.server.registry.DynamicRegistry;
 import net.minestom.server.world.DimensionType;
 import org.jetbrains.annotations.NotNull;
 
@@ -17,30 +15,20 @@ import java.util.concurrent.CompletableFuture;
 final class InstanceCreator {
     private static final int CHUNK_RADIUS = 5;
 
-    private static final DimensionType FULLBRIGHT = DimensionType.builder(NamespaceID.from("emortalmc", "fullbright")).ambientLight(1F).build();
+    private static final DimensionType FULLBRIGHT = DimensionType.builder().ambientLight(1F).build();
 
     static {
-        MinecraftServer.getDimensionTypeManager().addDimension(FULLBRIGHT);
+        MinecraftServer.getDimensionTypeRegistry().register("emortalmc:fullbright", FULLBRIGHT);
     }
 
-    static @NotNull Instance createRoot() {
-        Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer(FULLBRIGHT);
+    public static @NotNull Instance createWorld() {
+        DynamicRegistry<DimensionType> dimRegistry = MinecraftServer.getDimensionTypeRegistry();
+        Instance instance = MinecraftServer.getInstanceManager().createInstanceContainer(dimRegistry.getKey(FULLBRIGHT));
 
         instance.setGenerator(unit -> {
             unit.modifier().fillHeight(MapManager.FLOOR_HEIGHT, 65, Block.GRASS_BLOCK);
             unit.modifier().fillHeight(60, 64, Block.DIRT);
         });
-        instance.enableAutoChunkLoad(false);
-
-        loadAllChunks(instance);
-
-        return instance;
-    }
-
-    static @NotNull Instance createCopy(@NotNull Instance rootInstance) {
-        InstanceContainer instance = MinecraftServer.getInstanceManager().createInstanceContainer(FULLBRIGHT);
-
-        instance.setChunkLoader(new ChunkCopyingChunkLoader(rootInstance));
         instance.enableAutoChunkLoad(false);
 
         loadAllChunks(instance);
