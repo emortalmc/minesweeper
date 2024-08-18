@@ -1,3 +1,3 @@
-# minesweeper
+# Minesweeper
 
-EMC Minesweeper game
+Minesweeper recreated in Minecraft
