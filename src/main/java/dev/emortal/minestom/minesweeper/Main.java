@@ -8,7 +8,6 @@ import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
 
 public final class Main {
     private static final int MIN_PLAYERS = 1;
-    private static final int MAX_GAMES = 10;
 
     public static void main(String[] args) {
         MineIndicatorLoader.loadAll();
@@ -18,7 +17,6 @@ public final class Main {
 
             return GameSdkConfig.builder()
                     .minPlayers(MIN_PLAYERS)
-                    .maxGames(MAX_GAMES)
                     .finishBehaviour(GameSdkConfig.FinishBehaviour.REQUEUE)
                     .gameCreator(info -> new MinesweeperGame(info, mapManager.createMap()))
                     .build();
