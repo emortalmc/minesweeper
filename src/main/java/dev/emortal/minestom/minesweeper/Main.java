@@ -12,7 +12,7 @@ public final class Main {
     public static void main(String[] args) {
         MineIndicatorLoader.loadAll();
 
-        MinestomGameServer.create(() -> {
+        MinestomGameServer.create(moduleManager -> {
             MapManager mapManager = new MapManager();
 
             return GameSdkConfig.builder()
