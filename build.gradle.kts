@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.emortal.minestom:game-sdk:4f505ad")
+    implementation("dev.emortal.minestom:game-sdk:07ece8d")
 }
 
 java {
