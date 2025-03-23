@@ -1,9 +1,7 @@
 package dev.emortal.minestom.minesweeper.game;
 
-import dev.emortal.minestom.core.utils.KurushimiMinestomUtils;
 import dev.emortal.minestom.gamesdk.config.GameCreationInfo;
 import dev.emortal.minestom.gamesdk.game.Game;
-import dev.emortal.minestom.gamesdk.game.GameFinishedEvent;
 import dev.emortal.minestom.gamesdk.util.GameWinLoseMessages;
 import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
@@ -53,8 +51,12 @@ public final class MinesweeperGame extends Game {
     }
 
     @Override
-    public void onJoin(@NotNull Player player) {
+    public void onPreJoin(@NotNull Player player) {
         player.setRespawnPoint(MapManager.SPAWN_POSITION);
+    }
+
+    @Override
+    public void onJoin(@NotNull Player player) {
         player.setAutoViewable(true);
         player.setGameMode(GameMode.CREATIVE);
         this.teamAllocator.allocate(player);

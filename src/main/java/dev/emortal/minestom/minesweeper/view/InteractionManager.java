@@ -16,14 +16,13 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Point;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.PlayerHand;
 import net.minestom.server.event.inventory.InventoryItemChangeEvent;
-import net.minestom.server.event.inventory.PlayerInventoryItemChangeEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.inventory.AbstractInventory;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
@@ -102,7 +101,7 @@ public final class InteractionManager {
         int y = pos.blockY();
         int z = pos.blockZ();
 
-        if (event.getHand() != Player.Hand.MAIN) return;
+        if (event.getHand() != PlayerHand.MAIN) return;
         if (!player.getItemInMainHand().isAir()) {
             // This avoids players being able to place anything other than the carpets that get placed when they click with an empty hand
             return;
@@ -125,13 +124,7 @@ public final class InteractionManager {
 
     private void onItemChange(@NotNull InventoryItemChangeEvent event) {
         // This is used to stop players from being able to take items out of the creative inventory
-        AbstractInventory inventory;
-        if (event instanceof PlayerInventoryItemChangeEvent playerEvent && playerEvent.getInventory() == null) {
-            inventory = playerEvent.getPlayer().getInventory();
-        } else {
-            inventory = event.getInventory();
-        }
-        inventory.setItemStack(event.getSlot(), ItemStack.AIR);
+        event.getInventory().setItemStack(event.getSlot(), ItemStack.AIR);
     }
 
     private boolean isCarpet(@NotNull Block block) {
