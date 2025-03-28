@@ -5,6 +5,7 @@ import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.color.Color;
+import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
@@ -15,7 +16,6 @@ import net.minestom.server.entity.metadata.other.GlowItemFrameMeta;
 import net.minestom.server.entity.metadata.other.ItemFrameMeta;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.item.ItemComponent;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
 import org.jetbrains.annotations.NotNull;
@@ -49,7 +49,7 @@ public record MapTheme(@NotNull Block checkerMain, @NotNull Block checkerAlterna
             GlowItemFrameMeta meta = (GlowItemFrameMeta) entity.getEntityMeta();
             meta.setOrientation(ItemFrameMeta.Orientation.UP);
             meta.setItem(ItemStack.builder(Material.FILLED_MAP)
-                    .set(ItemComponent.MAP_ID, surroundingCount)
+                    .set(DataComponents.MAP_ID, surroundingCount)
                     .build());
 
             entity.setInstance(instance, new Pos(x, MapManager.FLOOR_HEIGHT + 1.0, y, 0F, -90F));
