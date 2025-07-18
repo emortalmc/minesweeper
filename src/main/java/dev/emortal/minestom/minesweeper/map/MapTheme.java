@@ -18,6 +18,7 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.item.Material;
+import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.NotNull;
 
 public record MapTheme(@NotNull Block checkerMain, @NotNull Block checkerAlternate, @NotNull Block safe, @NotNull Block mine,
@@ -47,7 +48,7 @@ public record MapTheme(@NotNull Block checkerMain, @NotNull Block checkerAlterna
             entity.setNoGravity(true);
 
             GlowItemFrameMeta meta = (GlowItemFrameMeta) entity.getEntityMeta();
-            meta.setOrientation(ItemFrameMeta.Orientation.UP);
+            meta.setDirection(Direction.UP);
             meta.setItem(ItemStack.builder(Material.FILLED_MAP)
                     .set(DataComponents.MAP_ID, surroundingCount)
                     .build());
