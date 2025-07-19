@@ -12,12 +12,12 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
-final class InstanceCreator {
+public final class InstanceCreator {
     private static final int CHUNK_RADIUS = 5;
 
     private static final DimensionType FULLBRIGHT = DimensionType.builder().ambientLight(1F).build();
 
-    static {
+    public static void registerDimensions() {
         MinecraftServer.getDimensionTypeRegistry().register("emortalmc:fullbright", FULLBRIGHT);
     }
 

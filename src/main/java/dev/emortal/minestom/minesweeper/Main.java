@@ -3,6 +3,7 @@ package dev.emortal.minestom.minesweeper;
 import dev.emortal.minestom.gamesdk.MinestomGameServer;
 import dev.emortal.minestom.gamesdk.config.GameSdkConfig;
 import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
+import dev.emortal.minestom.minesweeper.map.InstanceCreator;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.MineIndicatorLoader;
 
@@ -13,6 +14,8 @@ public final class Main {
         MineIndicatorLoader.loadAll();
 
         MinestomGameServer.create(moduleManager -> {
+            InstanceCreator.registerDimensions();
+
             MapManager mapManager = new MapManager();
 
             return GameSdkConfig.builder()
