@@ -120,8 +120,8 @@ public final class Board {
 
     public void revealSolved(Chunk chunk) {
         for (int relX = 0; relX < Chunk.CHUNK_SIZE_X; relX++) {
+            int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + relX;
             for (int relY = 0; relY < Chunk.CHUNK_SIZE_Z; relY++) {
-                int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + relX;
                 int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + relY;
                 if (isMine(x, y)) {
                     addFlag(new Vec2(x, y), chunk, Block.RED_CARPET);
@@ -155,11 +155,11 @@ public final class Board {
         return mines;
     }
 
-    public void reveal(int x, int y) {
+    public void reveal(int x, int y, Block.Setter blockSetter) {
         boolean mine = isMine(x, y);
         if (mine) return;
 
-        instance.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.theme.nothing());
+        blockSetter.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.theme.nothing());
 
         int mines = getMinesAround(x, y);
         if (mines > 0) {
@@ -167,16 +167,18 @@ public final class Board {
         }
     }
 
-    public Set<Vec2> revealAround(int x, int y) {
-        Set<Vec2> affectedChunks = new HashSet<>();
+    public Set<Chunk> revealAround(int x, int y) {
+        Set<Chunk> affectedChunks = new HashSet<>();
         revealAround(x, y, affectedChunks);
         return affectedChunks;
     }
 
-    private void revealAround(int x, int y, Set<Vec2> affectedChunks) {
-        reveal(x, y);
+    private void revealAround(int x, int y, Set<Chunk> affectedChunks) {
+        Chunk chunk = instance.getChunk(CoordConversion.globalToChunk(x), CoordConversion.globalToChunk(y));
 
-        affectedChunks.add(new Vec2(CoordConversion.globalToChunk(x), CoordConversion.globalToChunk(y)));
+        reveal(x, y, chunk);
+
+        affectedChunks.add(chunk);
 
         byte minesAround1 = getMinesAround(x, y);
         if (minesAround1 > 0) return;
@@ -187,8 +189,6 @@ public final class Board {
 
             if (this.isOutOfBounds(newX, newY)) continue;
             if (this.isRevealed(newX, newY)) continue;
-
-            reveal(newX, newY);
 
             this.revealAround(newX, newY, affectedChunks);
         }
@@ -243,8 +243,8 @@ public final class Board {
 
             for (Chunk chunk : instance.getChunks()) {
                 for (int relX = 0; relX < Chunk.CHUNK_SIZE_X; relX++) {
+                    int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + relX;
                     for (int relY = 0; relY < Chunk.CHUNK_SIZE_Z; relY++) {
-                        int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + relX;
                         int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + relY;
 
                         if (isOutOfBounds(x, y)) continue;

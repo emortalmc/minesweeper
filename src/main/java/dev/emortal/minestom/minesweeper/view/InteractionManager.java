@@ -17,7 +17,6 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.instance.Chunk;
-import net.minestom.server.instance.Instance;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
@@ -76,11 +75,12 @@ public final class InteractionManager {
         if (chunk == null) return;
 
         this.board.addClick(new Vec2(x, z), chunk);
-        Set<Vec2> affectedChunks = this.board.revealAround(x, z);
+        Set<Chunk> affectedChunks = this.board.revealAround(x, z);
 
-        for (Vec2 affectedChunkPos : affectedChunks) {
-            Chunk affectedChunk = player.getInstance().getChunk(affectedChunkPos.x(), affectedChunkPos.y());
+        for (Chunk affectedChunk : affectedChunks) {
             if (affectedChunk == null) continue;
+
+            affectedChunk.sendChunk();
 
             if (this.board.isSolved(affectedChunk)) {
                 this.board.revealSolved(affectedChunk);
@@ -104,7 +104,6 @@ public final class InteractionManager {
         if (this.finished) return;
 
         Player player = event.getPlayer();
-        Instance instance = event.getInstance();
         Point pos = event.getBlockPosition();
         Chunk chunk = event.getInstance().getChunkAt(pos);
         if (chunk == null) return;
