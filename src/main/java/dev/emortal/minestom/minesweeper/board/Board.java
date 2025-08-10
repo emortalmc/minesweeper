@@ -1,62 +1,144 @@
 package dev.emortal.minestom.minesweeper.board;
 
+import dev.emortal.minestom.minesweeper.map.MapManager;
+import dev.emortal.minestom.minesweeper.map.MapTheme;
 import dev.emortal.minestom.minesweeper.util.Direction8;
-import java.util.Arrays;
-import java.util.concurrent.ThreadLocalRandom;
+import dev.emortal.minestom.minesweeper.util.Vec2;
+import net.kyori.adventure.key.Key;
+import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.Vec;
+import net.minestom.server.instance.Chunk;
+import net.minestom.server.instance.Instance;
+import net.minestom.server.instance.batch.AbsoluteBlockBatch;
+import net.minestom.server.instance.block.Block;
+import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.HashSet;
+import java.util.Random;
+import java.util.Set;
 
 public final class Board {
 
-    private final @NotNull BoardSettings settings;
-    private final byte[][] grid;
+    private static final Tag<Boolean> POPULATED_TAG = Tag.Boolean("minesPopulated");
+    private static final Tag<Boolean> MINE_TAG = Tag.Boolean("blockHasMine");
+    public static final Tag<Set<Vec2>> CLICKS_TAG = Tag.Transient("chunkClicks");
+    public static final Tag<Set<Vec2>> FLAGS_TAG = Tag.Transient("chunkFlags");
 
-    public Board(@NotNull BoardSettings settings) {
-        this.settings = settings;
-        this.grid = createEmptyGrid(settings);
+    private final int width;
+    private final int height;
+    private final boolean infinite;
+    private final long seed;
+    private final @NotNull Instance instance;
+    private final @NotNull MapTheme theme;
+
+    private final @NotNull Set<Vec2> solvedChunks = new HashSet<>();
+    private final @NotNull Set<Vec2> touchedChunks = new HashSet<>();
+
+    public Board(long seed, @NotNull Instance instance, @NotNull MapTheme theme) {
+        this.width = 0;
+        this.height = 0;
+        this.infinite = true;
+        this.seed = seed;
+        this.instance = instance;
+        this.theme = theme;
     }
-
-    private static byte[][] createEmptyGrid(@NotNull BoardSettings settings) {
-        byte[][] grid = new byte[settings.length()][settings.width()];
-
-        for (byte[] row : grid) {
-            Arrays.fill(row, SquareType.UNREVEALED);
-        }
-
-        return grid;
-    }
-
-    public @NotNull BoardSettings getSettings() {
-        return this.settings;
+    public Board(int width, int height, long seed, @NotNull Instance instance, @NotNull MapTheme theme) {
+        this.infinite = false;
+        this.width = width;
+        this.height = height;
+        this.seed = seed;
+        this.instance = instance;
+        this.theme = theme;
     }
 
     public boolean isMine(int x, int y) {
-        return this.get(x, y) == SquareType.MINE;
+        boolean chunkLoaded = this.instance.isChunkLoaded(new Vec(x, MapManager.FLOOR_HEIGHT, y));
+        if (!chunkLoaded) {
+            Chunk chunk = this.instance.loadChunk(new Vec(x, MapManager.FLOOR_HEIGHT, y)).join();
+            populateWithMines(chunk);
+        }
+
+        return isMine(this.instance.getBlock(x, MapManager.FLOOR_HEIGHT, y));
+    }
+
+    public boolean isMine(Block block) {
+        return block.hasTag(MINE_TAG);
     }
 
     public boolean isRevealed(int x, int y) {
-        return this.get(x, y) != SquareType.UNREVEALED;
+        Block block = this.instance.getBlock(x, MapManager.FLOOR_HEIGHT, y, Block.Getter.Condition.TYPE);
+        if (block == null) return false;
+
+        return isRevealed(block);
     }
 
-    public byte get(int x, int y) {
-        return this.grid[x][y];
+    public boolean isRevealed(Block block) {
+        return block.compare(this.theme.nothing());
     }
 
-    public void set(int x, int y, byte value) {
-        this.grid[x][y] = value;
+    public boolean isFlagged(int x, int y) {
+        Block block = this.instance.getBlock(x, MapManager.FLOOR_HEIGHT + 1, y, Block.Getter.Condition.TYPE);
+        if (block == null) return false;
+        return isFlagged(block);
     }
 
-    public void setEmpty(int x, int y) {
-        this.set(x, y, SquareType.NOTHING);
+    public boolean isFlagged(@NotNull Block block) {
+        return MinecraftServer.process().blocks().getTag(Key.key("minecraft:wool_carpets")).contains(block);
+    }
+
+    public int getUnrevealedCount() {
+        int unrevealed = 0;
+        for (int x = 0; x < height; x++) {
+            for (int y = 0; y < width; y++) {
+                if (!isRevealed(x, y)) unrevealed++;
+            }
+        }
+
+        return unrevealed;
+    }
+
+    public boolean isSolved(Chunk chunk) {
+        if (solvedChunks.contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ()))) return true;
+
+        for (int x = 0; x < Chunk.CHUNK_SIZE_X; x++) {
+            for (int y = 0; y < Chunk.CHUNK_SIZE_Z; y++) {
+                Block block = chunk.getBlock(x, MapManager.FLOOR_HEIGHT, y);
+
+                if (!isRevealed(block) && !isMine(block)) {
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
+
+    public void revealSolved(Chunk chunk) {
+        for (int relX = 0; relX < Chunk.CHUNK_SIZE_X; relX++) {
+            for (int relY = 0; relY < Chunk.CHUNK_SIZE_Z; relY++) {
+                int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + relX;
+                int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + relY;
+                if (isMine(x, y)) {
+                    addFlag(new Vec2(x, y), chunk, Block.RED_CARPET);
+                    continue;
+                }
+                revealAround(x, y);
+            }
+        }
+
+        this.theme.showSolvedIndicator(chunk);
     }
 
     private void addMine(int x, int y) {
-        this.set(x, y, SquareType.MINE);
+        Block prevBlock = this.instance.getBlock(x, MapManager.FLOOR_HEIGHT, y);
+        this.instance.setBlock(x, MapManager.FLOOR_HEIGHT, y, prevBlock.withTag(MINE_TAG, true));
     }
 
     public byte getMinesAround(int x, int y) {
         byte mines = 0;
 
-        for (Direction8 direction : Direction8.values()) {
+        for (Direction8 direction : Direction8.VALUES) {
             int newX = x + direction.offsetX();
             int newY = y + direction.offsetY();
             if (this.isOutOfBounds(newX, newY)) continue;
@@ -69,33 +151,180 @@ public final class Board {
         return mines;
     }
 
-    private boolean isOutOfBounds(int x, int y) {
-        return x < 0 || x >= this.settings.length() || y < 0 || y >= this.settings.width();
+    public void reveal(int x, int y) {
+        boolean mine = isMine(x, y);
+        if (mine) return;
+
+        instance.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.theme.nothing());
+
+        int mines = getMinesAround(x, y);
+        if (mines > 0) {
+            this.theme.revealedSquarePlacer().revealSquare(this, x, y, mines);
+        }
     }
 
-    public void populateWithMines(int clickedX, int clickedY) {
-        int length = this.settings.length();
-        int width = this.settings.width();
+    public void revealAround(int x, int y) {
+        reveal(x, y);
 
-        int mines = this.settings.mines();
-        while (mines > 0) {
-            int x = getRandom(length);
-            int y = getRandom(width);
+        byte minesAround1 = getMinesAround(x, y);
+        if (minesAround1 > 0) return;
 
-            if (Math.abs(clickedX - x) < 2 && Math.abs(clickedY - y) < 2) {
-                continue;
+        for (Direction8 direction : Direction8.VALUES) {
+            int newX = x + direction.offsetX();
+            int newY = y + direction.offsetY();
+
+            if (this.isOutOfBounds(newX, newY)) continue;
+            if (this.isRevealed(newX, newY)) continue;
+
+            reveal(newX, newY);
+
+            this.revealAround(newX, newY);
+        }
+    }
+
+    public boolean isOutOfBounds(int x, int y) {
+        if (infinite) return false;
+        return x < 0 || x >= height || y < 0 || y >= width;
+    }
+
+    public void populateWithMines(Chunk chunk) {
+        if (chunk.hasTag(POPULATED_TAG)) return; // already populated
+
+        double base = 0.09;
+        long dx = Math.abs(chunk.getChunkX());
+        long dz = Math.abs(chunk.getChunkZ());
+        long chebyshev = Math.max(dx, dz);
+
+        double difficulty = base + (chebyshev * 0.01);
+        if (difficulty > 0.19) difficulty = 0.19;
+
+        populateWithMines(chunk, difficulty);
+    }
+
+    public void populateWithMines(Chunk chunk, double minePercent) {
+        chunk.setTag(POPULATED_TAG, true);
+
+        int mines = (int) (minePercent * Chunk.CHUNK_SIZE_X * Chunk.CHUNK_SIZE_Z);
+
+        Random random = createRandom(seed, chunk.getChunkX(), chunk.getChunkZ());
+
+        int i = 0;
+        while (mines > 0 && i < 256) {
+            int randX = random.nextInt(Chunk.CHUNK_SIZE_X);
+            int randY = random.nextInt(Chunk.CHUNK_SIZE_Z);
+            int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + randX;
+            int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + randY;
+
+            i++;
+
+            if (isMine(x, y)) continue;
+
+            addMine(x, y);
+
+            mines--;
+        }
+    }
+
+    public void revealMines() {
+        instance.scheduleNextTick(a -> {
+            AbsoluteBlockBatch batch = new AbsoluteBlockBatch();
+
+            for (Chunk chunk : instance.getChunks()) {
+                for (int relX = 0; relX < Chunk.CHUNK_SIZE_X; relX++) {
+                    for (int relY = 0; relY < Chunk.CHUNK_SIZE_Z; relY++) {
+                        int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + relX;
+                        int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + relY;
+
+                        if (isOutOfBounds(x, y)) continue;
+                        if (!isMine(x, y)) continue;
+                        batch.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.theme.mine());
+                    }
+                }
             }
 
-            if (!this.isMine(x, y)) {
-                this.addMine(x, y);
-                mines--;
-            }
+            batch.apply(this.instance, null);
+        });
+    }
+
+    public @NotNull Instance getInstance() {
+        return instance;
+    }
+
+    public @NotNull MapTheme getTheme() {
+        return theme;
+    }
+
+    public long getSeed() {
+        return seed;
+    }
+
+    public boolean isInfinite() {
+        return infinite;
+    }
+
+    public void addClick(Vec2 pos, Chunk chunk) {
+        Set<Vec2> clicks = chunk.getTag(CLICKS_TAG);
+        if (clicks == null) {
+            clicks = new HashSet<>();
+            chunk.setTag(CLICKS_TAG, clicks);
+            addTouchedChunk(chunk);
         }
 
-        this.set(clickedX, clickedY, SquareType.NOTHING);
+        clicks.add(pos);
     }
 
-    private static int getRandom(int max) {
-        return ThreadLocalRandom.current().nextInt(max);
+    public void addFlag(Vec2 pos, Chunk chunk, Block flagBlock) {
+        Set<Vec2> flags = chunk.getTag(FLAGS_TAG);
+        if (flags == null) {
+            flags = new HashSet<>();
+            chunk.setTag(FLAGS_TAG, flags);
+            addTouchedChunk(chunk);
+        }
+
+        chunk.setBlock(pos.x(), MapManager.FLOOR_HEIGHT + 1, pos.y(), flagBlock);
+        chunk.sendChunk();
+
+        flags.add(pos);
+    }
+
+    public void removeFlag(Vec2 pos, Chunk chunk) {
+        chunk.setBlock(pos.x(), MapManager.FLOOR_HEIGHT + 1, pos.y(), Block.AIR);
+        chunk.sendChunk();
+
+        Set<Vec2> flags = chunk.getTag(FLAGS_TAG);
+        if (flags == null) return;
+        flags.remove(pos);
+    }
+
+    public void addSolvedChunk(Chunk chunk) {
+        solvedChunks.add(new Vec2(chunk.getChunkX(), chunk.getChunkZ()));
+    }
+
+    public @NotNull Set<Chunk> getTouchedChunks() {
+        Set<Chunk> chunks = new HashSet<>();
+        for (Vec2 touchedChunk : touchedChunks) {
+            chunks.add(instance.getChunk(touchedChunk.x(), touchedChunk.y()));
+        }
+
+        return chunks;
+    }
+
+    public void addTouchedChunk(Chunk chunk) {
+        touchedChunks.add(new Vec2(chunk.getChunkX(), chunk.getChunkZ()));
+    }
+
+    public @NotNull Set<Vec2> getSolvedChunks() {
+        return solvedChunks;
+    }
+
+    public Random createRandom(final long seed, final int x, final int z) {
+        final Random random = new Random(seed);
+
+        long long1 = random.nextLong();
+        long long2 = random.nextLong();
+        long newSeed = (long) x * long1 ^ (long) z * long2 ^ seed;
+        random.setSeed(newSeed);
+
+        return random;
     }
 }

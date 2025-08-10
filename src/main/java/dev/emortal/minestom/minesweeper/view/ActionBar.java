@@ -11,14 +11,12 @@ import java.time.Duration;
 public final class ActionBar {
 
     private final @NotNull Instance instance;
-    private final int mines;
     private final long startTime;
 
     private int flags;
 
-    public ActionBar(@NotNull Instance instance, int mines) {
+    public ActionBar(@NotNull Instance instance) {
         this.instance = instance;
-        this.mines = mines;
         this.startTime = System.currentTimeMillis();
 
         // Keep action bar shown
@@ -44,10 +42,6 @@ public final class ActionBar {
 
         // ☠ {mines} MINES | ⚑ {flags} FLAGS | ⌚ 1m 23s
         this.instance.sendActionBar(Component.text()
-                .append(Component.text("☠ ", NamedTextColor.RED))
-                .append(Component.text(this.mines, NamedTextColor.RED))
-                .append(Component.text(" MINES", NamedTextColor.RED))
-                .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
                 .append(Component.text("⚑ ", NamedTextColor.GREEN))
                 .append(Component.text(this.flags, NamedTextColor.GREEN))
                 .append(Component.text(" FLAGS", NamedTextColor.GREEN))

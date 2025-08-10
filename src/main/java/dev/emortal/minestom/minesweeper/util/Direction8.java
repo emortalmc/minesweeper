@@ -11,6 +11,8 @@ public enum Direction8 {
     SOUTH_EAST(1, -1),
     SOUTH_WEST(-1, -1);
 
+    public static final Direction8[] VALUES = values();
+
     private final int offsetX;
     private final int offsetY;
 

@@ -1,29 +1,25 @@
 package dev.emortal.minestom.minesweeper.map;
 
+import dev.emortal.minestom.minesweeper.board.Board;
 import dev.emortal.minestom.minesweeper.util.NoTickEntity;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.util.RGBLike;
 import net.minestom.server.color.Color;
-import net.minestom.server.component.DataComponents;
 import net.minestom.server.coordinate.Pos;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.entity.Entity;
 import net.minestom.server.entity.EntityType;
 import net.minestom.server.entity.metadata.display.BlockDisplayMeta;
 import net.minestom.server.entity.metadata.display.TextDisplayMeta;
-import net.minestom.server.entity.metadata.other.GlowItemFrameMeta;
-import net.minestom.server.entity.metadata.other.ItemFrameMeta;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.instance.block.Block;
-import net.minestom.server.item.ItemStack;
-import net.minestom.server.item.Material;
-import net.minestom.server.utils.Direction;
 import org.jetbrains.annotations.NotNull;
 
-public record MapTheme(@NotNull Block checkerMain, @NotNull Block checkerAlternate, @NotNull Block safe, @NotNull Block mine,
+public record MapTheme(@NotNull Block unrevealed, @NotNull Block unrevealedAlt, @NotNull Block unrevealedAlt2, @NotNull Block unrevealedAlt3, @NotNull Block nothing, @NotNull Block mine,
                        @NotNull RevealedSquarePlacer revealedSquarePlacer) {
-    public static final @NotNull MapTheme DEFAULT = new MapTheme(Block.LIME_CONCRETE, Block.LIME_CONCRETE_POWDER, Block.STONE, Block.TNT,
+    public static final @NotNull MapTheme DEFAULT = new MapTheme(Block.LIME_CONCRETE, Block.LIME_CONCRETE_POWDER, Block.GREEN_CONCRETE, Block.GREEN_CONCRETE_POWDER, Block.SMOOTH_QUARTZ, Block.TNT,
             RevealedSquarePlacer.DISPLAY_ENTITY);
 
     private static final RGBLike[] COLORS = new RGBLike[]{
@@ -40,43 +36,37 @@ public record MapTheme(@NotNull Block checkerMain, @NotNull Block checkerAlterna
 
     @FunctionalInterface
     public interface RevealedSquarePlacer {
-        @NotNull RevealedSquarePlacer DEFAULT = (map, x, y, surroundingCount) -> {
-            if (surroundingCount < 1) return;
-            Instance instance = map.instance();
-
-            Entity entity = new Entity(EntityType.GLOW_ITEM_FRAME);
-            entity.setNoGravity(true);
-
-            GlowItemFrameMeta meta = (GlowItemFrameMeta) entity.getEntityMeta();
-            meta.setDirection(Direction.UP);
-            meta.setItem(ItemStack.builder(Material.FILLED_MAP)
-                    .set(DataComponents.MAP_ID, surroundingCount)
-                    .build());
-
-            entity.setInstance(instance, new Pos(x, MapManager.FLOOR_HEIGHT + 1.0, y, 0F, -90F));
-        };
-
         @NotNull RevealedSquarePlacer DISPLAY_ENTITY = (map, x, y, surroundingCount) -> {
             if (surroundingCount < 1) return;
-            Instance instance = map.instance();
-
-            double margin = 0.1;
-            Entity background = new NoTickEntity(EntityType.BLOCK_DISPLAY);
-            background.editEntityMeta(BlockDisplayMeta.class, meta -> {
-                meta.setBlockState(Block.WHITE_CONCRETE);
-                meta.setScale(new Vec(1.0 - margin, 0.01, 1.0 - margin));
-            });
-            background.setInstance(instance, new Pos(x + margin / 2, MapManager.FLOOR_HEIGHT + 1.0, y + margin / 2));
+            Instance instance = map.getInstance();
 
             Entity number = new NoTickEntity(EntityType.TEXT_DISPLAY);
             number.editEntityMeta(TextDisplayMeta.class, meta -> {
-                meta.setText(Component.text(surroundingCount, TextColor.color(COLORS[surroundingCount])));
+                Component text = Component.text(surroundingCount, TextColor.color(COLORS[surroundingCount]));
+                meta.setText(text);
                 meta.setBackgroundColor(0);
+                meta.setHeight(0.3f);
+                meta.setWidth(0.3f);
                 meta.setScale(new Vec(3));
             });
-            number.setInstance(instance, new Pos(x + 0.47, MapManager.FLOOR_HEIGHT + 1.05, y + 1, 0F, -90F));
+            number.setInstance(instance, new Pos(x + 0.47, MapManager.FLOOR_HEIGHT + 1 + Vec.EPSILON, y + 0.92, 0F, -90F));
         };
 
-        void revealSquare(@NotNull BoardMap map, int x, int y, int surroundingCount);
+        void revealSquare(@NotNull Board map, int x, int y, int surroundingCount);
+    }
+
+    public void showSolvedIndicator(Chunk chunk) {
+        int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X;
+        int z = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z;
+
+        Entity number = new NoTickEntity(EntityType.BLOCK_DISPLAY);
+        number.editEntityMeta(BlockDisplayMeta.class, meta -> {
+            meta.setBlockState(Block.LIGHT_GRAY_STAINED_GLASS);
+            meta.setHeight(32f);
+            meta.setWidth(32f);
+            meta.setViewRange(3f);
+            meta.setScale(new Vec(Chunk.CHUNK_SIZE_X));
+        });
+        number.setInstance(chunk.getInstance(), new Pos(x, MapManager.FLOOR_HEIGHT - 14.92, z));
     }
 }

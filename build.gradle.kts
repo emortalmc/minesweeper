@@ -1,6 +1,6 @@
 plugins {
     java
-    id("com.gradleup.shadow") version "9.0.0-rc1"
+    id("com.gradleup.shadow") version "9.0.0-rc3"
 }
 
 group = "dev.emortal"
@@ -19,6 +19,7 @@ repositories {
 
 dependencies {
     implementation("dev.emortal.minestom:game-sdk:c30a7db")
+    implementation("com.github.luben:zstd-jni:1.5.7-4")
 }
 
 java {

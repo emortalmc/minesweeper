@@ -1,16 +1,11 @@
 package dev.emortal.minestom.minesweeper.view;
 
 import dev.emortal.minestom.minesweeper.board.Board;
-import dev.emortal.minestom.minesweeper.board.BoardSettings;
-import dev.emortal.minestom.minesweeper.game.BlockUpdater;
 import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
 import dev.emortal.minestom.minesweeper.game.PlayerTags;
-import dev.emortal.minestom.minesweeper.map.BoardMap;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Vec2;
-import java.util.List;
-import java.util.Locale;
-
+import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -21,8 +16,8 @@ import net.minestom.server.event.inventory.InventoryItemChangeEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
+import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
@@ -30,20 +25,16 @@ import org.jetbrains.annotations.NotNull;
 public final class InteractionManager {
 
     private final @NotNull MinesweeperGame game;
-    private final @NotNull BoardMap map;
-    private final @NotNull ViewManager viewManager;
-    private final @NotNull BlockUpdater blockUpdater;
+    private final @NotNull Board board;
     private final @NotNull ActionBar actionBar;
 
     private boolean firstClick = true;
     private boolean finished;
 
-    public InteractionManager(@NotNull MinesweeperGame game, @NotNull BoardMap map) {
+    public InteractionManager(@NotNull MinesweeperGame game, @NotNull Board board) {
         this.game = game;
-        this.map = map;
-        this.viewManager = new ViewManager(map);
-        this.blockUpdater = new BlockUpdater(map, this.viewManager);
-        this.actionBar = new ActionBar(map.instance(), map.board().getSettings().mines());
+        this.board = board;
+        this.actionBar = new ActionBar(board.getInstance());
 
         game.getEventNode().addListener(PlayerBlockBreakEvent.class, this::onBreak);
         game.getEventNode().addListener(PlayerBlockInteractEvent.class, this::onClick);
@@ -55,7 +46,6 @@ public final class InteractionManager {
         event.setCancelled(true); // We never actually want to break the block
         if (this.finished) return;
 
-        Instance instance = event.getInstance();
         Player player = event.getPlayer();
 
         Point pos = event.getBlockPosition();
@@ -64,25 +54,39 @@ public final class InteractionManager {
         int z = pos.blockZ();
 
         if (this.isOutsideBoard(x, y, z)) return;
-        if (this.hasCarpetAbove(instance, x, y, z)) return;
+        if (this.board.isFlagged(x, z)) return;
+        if (this.board.isRevealed(x, z)) return;
         if (!player.getItemInMainHand().isAir()) return;
 
-        Board board = this.map.board();
-        if (board.isMine(x, z)) {
-            this.loseGame(player, x, z);
+        if (this.firstClick) {
+            this.firstClick = false;
+
+            // make sure first click is not bomb
+            this.board.getInstance().setBlock(x, MapManager.FLOOR_HEIGHT, z, this.board.getTheme().nothing());
+        }
+
+        if (this.board.isMine(x, z)) {
+            this.loseGame(player);
             return;
         }
 
-        this.revealMinesOnBoard(player, board, x, z);
-        List<Vec2> blocksToChange = this.revealBlocks(board, x, z);
+        Chunk chunk = player.getInstance().getChunkAt(pos);
+        if (chunk == null) return;
 
-        if (this.viewManager.getUnrevealed() <= 0) {
+        this.board.addClick(new Vec2(x, z), chunk);
+        this.board.revealAround(x, z);
+
+        if (this.board.isSolved(chunk)) {
+            playSolvedChunkSound(this.board.getInstance());
+            this.board.getTheme().showSolvedIndicator(chunk);
+            this.board.addSolvedChunk(chunk);
+        }
+
+        if (!this.board.isInfinite() && this.board.getUnrevealedCount() <= 0) {
             this.win(player);
             return;
         }
 
-        if (blocksToChange.isEmpty()) return;
-        this.blockUpdater.updateBlocks(blocksToChange);
         this.actionBar.update();
     }
 
@@ -94,9 +98,10 @@ public final class InteractionManager {
 
         Player player = event.getPlayer();
         Instance instance = event.getInstance();
-        Block block = event.getBlock();
-
         Point pos = event.getBlockPosition();
+        Chunk chunk = event.getInstance().getChunkAt(pos);
+        if (chunk == null) return;
+
         int x = pos.blockX();
         int y = pos.blockY();
         int z = pos.blockZ();
@@ -107,47 +112,27 @@ public final class InteractionManager {
             return;
         }
 
-        if (this.isCarpet(block)) {
+        if (this.board.isFlagged(x, z)) {
             // If the block is already carpet (a flag), we want to remove the flag
-            instance.setBlock(pos, Block.AIR);
             player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
             this.actionBar.decrementFlags();
+
+            this.board.removeFlag(new Vec2(x, z), chunk);
+
             return;
         }
 
         if (this.isInvalidFlag(instance, x, y, z)) return;
 
-        instance.setBlock(x, y + 1, z, player.getTag(PlayerTags.COLOR).carpet());
         player.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_FLAP, Sound.Source.MASTER, 0.6F, 2F));
         this.actionBar.incrementFlags();
+
+        this.board.addFlag(new Vec2(x, z), chunk, player.getTag(PlayerTags.COLOR).carpet());
     }
 
     private void onItemChange(@NotNull InventoryItemChangeEvent event) {
         // This is used to stop players from being able to take items out of the creative inventory
         event.getInventory().setItemStack(event.getSlot(), ItemStack.AIR);
-    }
-
-    private boolean isCarpet(@NotNull Block block) {
-        return block.name().toLowerCase(Locale.ROOT).endsWith("carpet");
-    }
-
-    private void revealMinesOnBoard(@NotNull Player player, @NotNull Board board, int x, int y) {
-        byte minesAround = board.getMinesAround(x, y);
-        if (board.get(x, y) == minesAround) return;
-
-        board.set(x, y, minesAround);
-        this.viewManager.reveal(x, y);
-        this.playRevealSound(player);
-    }
-
-    private @NotNull List<Vec2> revealBlocks(@NotNull Board board, int x, int y) {
-        if (this.firstClick) {
-            this.firstClick = false;
-            board.populateWithMines(x, y);
-            return this.viewManager.revealAroundStart(x, y);
-        } else {
-            return this.viewManager.revealAround(x, y);
-        }
     }
 
     private void win(@NotNull Player player) {
@@ -156,7 +141,7 @@ public final class InteractionManager {
         this.finished = true;
     }
 
-    private void loseGame(@NotNull Player player, int x, int z) {
+    private void loseGame(@NotNull Player player) {
         Component lossMessage = Component.text()
                 .append(Component.text(player.getUsername(), NamedTextColor.RED))
                 .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY))
@@ -168,36 +153,35 @@ public final class InteractionManager {
         }
 
         this.playMineSound(player);
-        this.blockUpdater.revealMines(x, z);
         this.game.lose();
         this.finished = true;
     }
 
     private boolean isInvalidFlag(@NotNull Instance instance, int x, int y, int z) {
         return this.isOutsideBoard(x, y, z) || // Out of bounds
-                this.hasCarpetAbove(instance, x, y, z) || // Somehow clicked a block with carpet on top, cannot flag
-                (this.viewManager.isRevealed(x, z) && !this.map.board().isMine(x, z)); // Is revealed and not a mine
-    }
-
-    private boolean hasCarpetAbove(@NotNull Instance instance, int x, int y, int z) {
-        return this.isCarpet(instance.getBlock(x, y + 1, z));
+                this.board.isFlagged(x, z) || // Somehow clicked a block with carpet on top, cannot flag
+                this.board.isRevealed(x, z); // Is revealed
     }
 
     private boolean isOutsideBoard(int x, int y, int z) {
-        BoardSettings settings = this.map.board().getSettings();
-        return y != MapManager.FLOOR_HEIGHT || x < 0 || x >= settings.length() || z < 0 || z >= settings.width();
+        if (this.board.isOutOfBounds(x, z)) return true;
+        return y != MapManager.FLOOR_HEIGHT;
     }
 
-    private void playRevealSound(@NotNull Player player) {
-        player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F), Sound.Emitter.self());
+    private void playRevealSound(@NotNull Audience audience) {
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F), Sound.Emitter.self());
     }
 
-    private void playMineSound(@NotNull Player player) {
-        player.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 4F, 0.84F), Sound.Emitter.self());
+    private void playSolvedChunkSound(@NotNull Audience audience) {
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 0.5F, 1F), Sound.Emitter.self());
     }
 
-    private void playWinSounds(@NotNull Player player) {
-        player.playSound(Sound.sound(SoundEvent.ENTITY_VILLAGER_CELEBRATE, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
-        player.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
+    private void playMineSound(@NotNull Audience audience) {
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 4F, 0.84F), Sound.Emitter.self());
+    }
+
+    private void playWinSounds(@NotNull Audience audience) {
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_VILLAGER_CELEBRATE, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
     }
 }
