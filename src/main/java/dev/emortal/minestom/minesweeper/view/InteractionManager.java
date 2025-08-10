@@ -22,6 +22,8 @@ import net.minestom.server.item.ItemStack;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.Set;
+
 public final class InteractionManager {
 
     private final @NotNull MinesweeperGame game;
@@ -74,12 +76,17 @@ public final class InteractionManager {
         if (chunk == null) return;
 
         this.board.addClick(new Vec2(x, z), chunk);
-        this.board.revealAround(x, z);
+        Set<Vec2> affectedChunks = this.board.revealAround(x, z);
 
-        if (this.board.isSolved(chunk)) {
-            playSolvedChunkSound(this.board.getInstance());
-            this.board.getTheme().showSolvedIndicator(chunk);
-            this.board.addSolvedChunk(chunk);
+        for (Vec2 affectedChunkPos : affectedChunks) {
+            Chunk affectedChunk = player.getInstance().getChunk(affectedChunkPos.x(), affectedChunkPos.y());
+            if (affectedChunk == null) continue;
+
+            if (this.board.isSolved(affectedChunk)) {
+                this.board.revealSolved(affectedChunk);
+                this.board.addSolvedChunk(affectedChunk);
+                playSolvedChunkSound(this.board.getInstance());
+            }
         }
 
         if (!this.board.isInfinite() && this.board.getUnrevealedCount() <= 0) {
@@ -122,7 +129,7 @@ public final class InteractionManager {
             return;
         }
 
-        if (this.isInvalidFlag(instance, x, y, z)) return;
+        if (this.isInvalidFlag(x, y, z)) return;
 
         player.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_FLAP, Sound.Source.MASTER, 0.6F, 2F));
         this.actionBar.incrementFlags();
@@ -157,7 +164,7 @@ public final class InteractionManager {
         this.finished = true;
     }
 
-    private boolean isInvalidFlag(@NotNull Instance instance, int x, int y, int z) {
+    private boolean isInvalidFlag(int x, int y, int z) {
         return this.isOutsideBoard(x, y, z) || // Out of bounds
                 this.board.isFlagged(x, z) || // Somehow clicked a block with carpet on top, cannot flag
                 this.board.isRevealed(x, z); // Is revealed

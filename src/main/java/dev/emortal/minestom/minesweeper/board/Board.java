@@ -6,6 +6,7 @@ import dev.emortal.minestom.minesweeper.util.Direction8;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
+import net.minestom.server.coordinate.CoordConversion;
 import net.minestom.server.coordinate.Vec;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
@@ -166,8 +167,16 @@ public final class Board {
         }
     }
 
-    public void revealAround(int x, int y) {
+    public Set<Vec2> revealAround(int x, int y) {
+        Set<Vec2> affectedChunks = new HashSet<>();
+        revealAround(x, y, affectedChunks);
+        return affectedChunks;
+    }
+
+    private void revealAround(int x, int y, Set<Vec2> affectedChunks) {
         reveal(x, y);
+
+        affectedChunks.add(new Vec2(CoordConversion.globalToChunk(x), CoordConversion.globalToChunk(y)));
 
         byte minesAround1 = getMinesAround(x, y);
         if (minesAround1 > 0) return;
@@ -181,7 +190,7 @@ public final class Board {
 
             reveal(newX, newY);
 
-            this.revealAround(newX, newY);
+            this.revealAround(newX, newY, affectedChunks);
         }
     }
 
