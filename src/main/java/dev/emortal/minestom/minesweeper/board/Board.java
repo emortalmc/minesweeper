@@ -53,9 +53,12 @@ public final class Board {
     }
 
     public boolean isMine(int x, int y) {
-        boolean chunkLoaded = this.instance.isChunkLoaded(new Vec(x, MapManager.FLOOR_HEIGHT, y));
-        if (!chunkLoaded) {
-            Chunk chunk = this.instance.loadChunk(new Vec(x, MapManager.FLOOR_HEIGHT, y)).join();
+        Chunk chunk = this.instance.getChunkAt(x, y);
+        if (chunk == null) {
+            chunk = this.instance.loadChunk(new Vec(x, MapManager.FLOOR_HEIGHT, y)).join();
+        }
+
+        if (!chunk.hasTag(POPULATED_TAG)) {
             populateWithMines(chunk);
         }
 

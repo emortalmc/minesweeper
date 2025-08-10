@@ -14,7 +14,6 @@ import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
-import net.minestom.server.event.instance.InstanceChunkLoadEvent;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.timer.TaskSchedule;
@@ -36,9 +35,6 @@ public final class MinesweeperGame extends Game {
         new InteractionManager(this, board);
 
         this.getEventNode().addListener(PlayerBlockBreakEvent.class, event -> event.setCancelled(true));
-        this.getEventNode().addListener(InstanceChunkLoadEvent.class, event -> {
-            this.board.populateWithMines(event.getChunk());
-        });
 
 //        board.getInstance().scheduler().buildTask(() -> {
 //            System.out.println("Saving game...");

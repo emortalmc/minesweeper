@@ -58,17 +58,17 @@ public final class InteractionManager {
         if (this.board.isRevealed(x, z)) return;
         if (!player.getItemInMainHand().isAir()) return;
 
-        if (this.firstClick) {
-            this.firstClick = false;
-
-            // make sure first click is not bomb
-            this.board.getInstance().setBlock(x, MapManager.FLOOR_HEIGHT, z, this.board.getTheme().nothing());
-        }
-
         if (this.board.isMine(x, z)) {
-            this.loseGame(player);
-            return;
+            if (this.firstClick) {
+                // make sure first click is not bomb
+                this.board.getInstance().setBlock(x, MapManager.FLOOR_HEIGHT, z, this.board.getTheme().nothing());
+            } else {
+                this.loseGame(player);
+                return;
+            }
         }
+
+        this.firstClick = false;
 
         Chunk chunk = player.getInstance().getChunkAt(pos);
         if (chunk == null) return;
