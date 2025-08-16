@@ -132,12 +132,16 @@ public final class InteractionManager {
             return;
         }
 
+        // If the block is already carpet (a flag), we want to remove the flag
         if (this.board.isFlagged(x, z)) {
-            // If the block is already carpet (a flag), we want to remove the flag
-            player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
-            this.actionBar.decrementFlags();
+            if (!(this.board.getFlag(x, z) == Block.BLACK_CARPET)
+                    && (!this.board.getSolvedChunks().contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ())))) {
+                // But only if it is not from a lost life or a completed chunk
+                player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
+                this.actionBar.decrementFlags();
 
-            this.board.removeFlag(new Vec2(x, z), chunk);
+                this.board.removeFlag(new Vec2(x, z), chunk);
+            }
 
             return;
         }
