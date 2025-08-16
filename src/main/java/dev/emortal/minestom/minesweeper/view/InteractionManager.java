@@ -117,14 +117,15 @@ public final class InteractionManager {
 
         if (event.getHand() != PlayerHand.MAIN) return;
         if (!player.getItemInMainHand().isAir()) {
-            // This avoids players being able to place anything other than the carpets that get placed when they click with an empty hand
+            // This avoids players being able to place anything other than the carpets that
+            // get placed when they click with an empty hand
             return;
         }
 
         // If the block is already carpet (a flag), we want to remove the flag
         if (this.board.isFlagged(x, z)) {
-            if (!(this.board.getFlag(x, z) == Block.BLACK_CARPET)
-                    && (!this.board.getSolvedChunks().contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ())))) {
+            if ((this.board.getFlag(x, z) != Block.BLACK_CARPET)
+                    && !this.board.getSolvedChunks().contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ()))) {
                 // But only if it is not from a lost life or a completed chunk
                 player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
                 this.actionBar.decrementFlags();
@@ -144,7 +145,8 @@ public final class InteractionManager {
     }
 
     private void onItemChange(@NotNull InventoryItemChangeEvent event) {
-        // This is used to stop players from being able to take items out of the creative inventory
+        // This is used to stop players from being able to take items out of the
+        // creative inventory
         event.getInventory().setItemStack(event.getSlot(), ItemStack.AIR);
     }
 
@@ -157,7 +159,7 @@ public final class InteractionManager {
     private void solveChunk(Chunk chunk) {
         this.board.revealSolved(chunk);
         this.board.addSolvedChunk(chunk);
-        playSolvedChunkSound(this.board.getInstance());
+        this.playSolvedChunkSound(this.board.getInstance());
 
         this.solvedChunks += 1;
 
@@ -172,10 +174,8 @@ public final class InteractionManager {
 
         this.board.addFlag(new Vec2(x, z), chunk, Block.BLACK_CARPET);
 
-        Component lossMessage = Component.text()
-                .append(Component.text(player.getUsername(), NamedTextColor.RED))
-                .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY))
-                .build();
+        Component lossMessage = Component.text().append(Component.text(player.getUsername(), NamedTextColor.RED))
+                .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY)).build();
 
         for (Player gamePlayer : this.game.getPlayers()) {
             this.playMineSound(gamePlayer);
@@ -206,19 +206,24 @@ public final class InteractionManager {
     }
 
     private void playRevealSound(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F),
+                Sound.Emitter.self());
     }
 
     private void playSolvedChunkSound(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 0.5F, 1F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 0.5F, 1F),
+                Sound.Emitter.self());
     }
 
     private void playMineSound(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 4F, 0.84F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 4F, 0.84F),
+                Sound.Emitter.self());
     }
 
     private void playWinSounds(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_VILLAGER_CELEBRATE, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_VILLAGER_CELEBRATE, Sound.Source.MASTER, 1F, 1F),
+                Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F),
+                Sound.Emitter.self());
     }
 }
