@@ -10,6 +10,7 @@ import net.kyori.adventure.sound.Sound;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.minestom.server.coordinate.Point;
+import net.minestom.server.coordinate.Pos;
 import net.minestom.server.entity.Player;
 import net.minestom.server.entity.PlayerHand;
 import net.minestom.server.event.inventory.InventoryItemChangeEvent;
@@ -17,6 +18,7 @@ import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.event.player.PlayerBlockInteractEvent;
 import net.minestom.server.event.player.PlayerBlockPlaceEvent;
 import net.minestom.server.instance.Chunk;
+import net.minestom.server.instance.block.Block;
 import net.minestom.server.item.ItemStack;
 import net.minestom.server.sound.SoundEvent;
 import org.jetbrains.annotations.NotNull;
@@ -28,6 +30,8 @@ public final class InteractionManager {
     private final @NotNull MinesweeperGame game;
     private final @NotNull Board board;
     private final @NotNull ActionBar actionBar;
+
+    private int solvedChunks;
 
     private boolean firstClick = true;
     private boolean finished;
@@ -64,7 +68,7 @@ public final class InteractionManager {
                 // make sure first click is not bomb
                 this.board.getInstance().setBlock(x, MapManager.FLOOR_HEIGHT, z, this.board.getTheme().nothing());
             } else {
-                this.loseGame(player);
+                this.damage(player, x, z);
                 return;
             }
         }
@@ -83,9 +87,7 @@ public final class InteractionManager {
             affectedChunk.sendChunk();
 
             if (this.board.isSolved(affectedChunk)) {
-                this.board.revealSolved(affectedChunk);
-                this.board.addSolvedChunk(affectedChunk);
-                playSolvedChunkSound(this.board.getInstance());
+                this.solveChunk(affectedChunk);
             }
         }
 
@@ -99,7 +101,8 @@ public final class InteractionManager {
 
     private void onClick(@NotNull PlayerBlockInteractEvent event) {
         // We place and remove the carpet ourselves
-        // This makes the logic significantly easier, rather than having to cancel everywhere separately, and risking missing something
+        // This makes the logic significantly easier, rather than having to cancel
+        // everywhere separately, and risking missing something
         event.setCancelled(true);
         if (this.finished) return;
 
@@ -114,16 +117,21 @@ public final class InteractionManager {
 
         if (event.getHand() != PlayerHand.MAIN) return;
         if (!player.getItemInMainHand().isAir()) {
-            // This avoids players being able to place anything other than the carpets that get placed when they click with an empty hand
+            // This avoids players being able to place anything other than the carpets that
+            // get placed when they click with an empty hand
             return;
         }
 
+        // If the block is already carpet (a flag), we want to remove the flag
         if (this.board.isFlagged(x, z)) {
-            // If the block is already carpet (a flag), we want to remove the flag
-            player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
-            this.actionBar.decrementFlags();
+            if ((this.board.getFlag(x, z) != Block.BLACK_CARPET)
+                    && !this.board.getSolvedChunks().contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ()))) {
+                // But only if it is not from a lost life or a completed chunk
+                player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
+                this.actionBar.decrementFlags();
 
-            this.board.removeFlag(new Vec2(x, z), chunk);
+                this.board.removeFlag(new Vec2(x, z), chunk);
+            }
 
             return;
         }
@@ -137,7 +145,8 @@ public final class InteractionManager {
     }
 
     private void onItemChange(@NotNull InventoryItemChangeEvent event) {
-        // This is used to stop players from being able to take items out of the creative inventory
+        // This is used to stop players from being able to take items out of the
+        // creative inventory
         event.getInventory().setItemStack(event.getSlot(), ItemStack.AIR);
     }
 
@@ -147,11 +156,26 @@ public final class InteractionManager {
         this.finished = true;
     }
 
-    private void loseGame(@NotNull Player player) {
-        Component lossMessage = Component.text()
-                .append(Component.text(player.getUsername(), NamedTextColor.RED))
-                .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY))
-                .build();
+    private void solveChunk(Chunk chunk) {
+        this.board.revealSolved(chunk);
+        this.board.addSolvedChunk(chunk);
+        this.playSolvedChunkSound(this.board.getInstance());
+
+        this.solvedChunks += 1;
+
+        if (this.solvedChunks % 3 == 0) {
+            this.actionBar.incrementLives();
+        }
+    }
+
+    private void damage(@NotNull Player player, int x, int z) {
+        int lives = this.actionBar.decrementLives();
+        Chunk chunk = player.getInstance().getChunkAt(new Pos(x, MapManager.FLOOR_HEIGHT, z));
+
+        this.board.addFlag(new Vec2(x, z), chunk, Block.BLACK_CARPET);
+
+        Component lossMessage = Component.text().append(Component.text(player.getUsername(), NamedTextColor.RED))
+                .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY)).build();
 
         for (Player gamePlayer : this.game.getPlayers()) {
             this.playMineSound(gamePlayer);
@@ -159,6 +183,13 @@ public final class InteractionManager {
         }
 
         this.playMineSound(player);
+
+        if (lives <= 0) {
+            this.loseGame(player);
+        }
+    }
+
+    private void loseGame(@NotNull Player player) {
         this.game.lose();
         this.finished = true;
     }
@@ -175,19 +206,24 @@ public final class InteractionManager {
     }
 
     private void playRevealSound(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F),
+                Sound.Emitter.self());
     }
 
     private void playSolvedChunkSound(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 0.5F, 1F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 0.5F, 1F),
+                Sound.Emitter.self());
     }
 
     private void playMineSound(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 4F, 0.84F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_GENERIC_EXPLODE, Sound.Source.MASTER, 4F, 0.84F),
+                Sound.Emitter.self());
     }
 
     private void playWinSounds(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_VILLAGER_CELEBRATE, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F), Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_VILLAGER_CELEBRATE, Sound.Source.MASTER, 1F, 1F),
+                Sound.Emitter.self());
+        audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F),
+                Sound.Emitter.self());
     }
 }

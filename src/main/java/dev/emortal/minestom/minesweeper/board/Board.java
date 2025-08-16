@@ -44,6 +44,7 @@ public final class Board {
         this.instance = instance;
         this.theme = theme;
     }
+
     public Board(int width, int height, long seed, @NotNull Instance instance, @NotNull MapTheme theme) {
         this.infinite = false;
         this.width = width;
@@ -79,6 +80,10 @@ public final class Board {
 
     public boolean isRevealed(Block block) {
         return block.compare(this.theme.nothing());
+    }
+
+    public Block getFlag(int x, int y) {
+        return this.instance.getBlock(x, MapManager.FLOOR_HEIGHT + 1, y);
     }
 
     public boolean isFlagged(int x, int y) {
