@@ -102,7 +102,8 @@ public class BoardReader {
     }
 
     static void assertThat(boolean condition, @NotNull String message) {
-        if (!condition) throw new Error(message);
+        if (!condition)
+            throw new Error(message);
     }
 
     public static class Error extends RuntimeException {

@@ -2,6 +2,9 @@ package dev.emortal.minestom.minesweeper.view;
 
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.title.Title;
+import net.minestom.server.entity.Player;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
@@ -14,9 +17,11 @@ public final class ActionBar {
     private final long startTime;
 
     private int flags;
+    private int lives;
 
     public ActionBar(@NotNull Instance instance) {
         this.instance = instance;
+        this.lives = 3;
         this.startTime = System.currentTimeMillis();
 
         // Keep action bar shown
@@ -24,6 +29,19 @@ public final class ActionBar {
                 .buildTask(this::update)
                 .repeat(TaskSchedule.tick(20))
                 .schedule();
+    }
+
+    public void incrementLives() {
+        if (this.lives < 3) {
+            this.lives++;
+        }
+        this.update();
+    }
+
+    public int decrementLives() {
+        this.lives--;
+        this.update();
+        return this.lives;
     }
 
     public void incrementFlags() {
@@ -45,6 +63,10 @@ public final class ActionBar {
                 .append(Component.text("⚑ ", NamedTextColor.GREEN))
                 .append(Component.text(this.flags, NamedTextColor.GREEN))
                 .append(Component.text(" FLAGS", NamedTextColor.GREEN))
+                .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
+                .append(Component.text("♥ ", NamedTextColor.RED))
+                .append(Component.text(this.lives, NamedTextColor.RED))
+                .append(Component.text(" LIVES", NamedTextColor.RED))
                 .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
                 .append(Component.text("⌚ ", NamedTextColor.AQUA))
                 .append(Component.text(this.formatDuration(duration), NamedTextColor.AQUA)));
