@@ -75,8 +75,7 @@ public final class Board {
 
     public boolean isRevealed(int x, int y) {
         Block block = this.instance.getBlock(x, MapManager.FLOOR_HEIGHT, y, Block.Getter.Condition.TYPE);
-        if (block == null)
-            return false;
+        if (block == null) return false;
 
         return isRevealed(block);
     }
@@ -91,8 +90,7 @@ public final class Board {
 
     public boolean isFlagged(int x, int y) {
         Block block = this.instance.getBlock(x, MapManager.FLOOR_HEIGHT + 1, y, Block.Getter.Condition.TYPE);
-        if (block == null)
-            return false;
+        if (block == null) return false;
         return isFlagged(block);
     }
 
@@ -104,8 +102,7 @@ public final class Board {
         int unrevealed = 0;
         for (int x = 0; x < height; x++) {
             for (int y = 0; y < width; y++) {
-                if (!isRevealed(x, y))
-                    unrevealed++;
+                if (!isRevealed(x, y)) unrevealed++;
             }
         }
 
@@ -113,8 +110,7 @@ public final class Board {
     }
 
     public boolean isSolved(Chunk chunk) {
-        if (solvedChunks.contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ())))
-            return true;
+        if (solvedChunks.contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ()))) return true;
 
         for (int x = 0; x < Chunk.CHUNK_SIZE_X; x++) {
             for (int y = 0; y < Chunk.CHUNK_SIZE_Z; y++) {
@@ -156,8 +152,7 @@ public final class Board {
         for (Direction8 direction : Direction8.VALUES) {
             int newX = x + direction.offsetX();
             int newY = y + direction.offsetY();
-            if (this.isOutOfBounds(newX, newY))
-                continue;
+            if (this.isOutOfBounds(newX, newY)) continue;
 
             if (this.isMine(newX, newY)) {
                 mines++;
@@ -169,8 +164,7 @@ public final class Board {
 
     public void reveal(int x, int y, Block.Setter blockSetter) {
         boolean mine = isMine(x, y);
-        if (mine)
-            return;
+        if (mine) return;
 
         blockSetter.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.theme.nothing());
 
@@ -194,31 +188,26 @@ public final class Board {
         affectedChunks.add(chunk);
 
         byte minesAround1 = getMinesAround(x, y);
-        if (minesAround1 > 0)
-            return;
+        if (minesAround1 > 0) return;
 
         for (Direction8 direction : Direction8.VALUES) {
             int newX = x + direction.offsetX();
             int newY = y + direction.offsetY();
 
-            if (this.isOutOfBounds(newX, newY))
-                continue;
-            if (this.isRevealed(newX, newY))
-                continue;
+            if (this.isOutOfBounds(newX, newY)) continue;
+            if (this.isRevealed(newX, newY)) continue;
 
             this.revealAround(newX, newY, affectedChunks);
         }
     }
 
     public boolean isOutOfBounds(int x, int y) {
-        if (infinite)
-            return false;
+        if (infinite) return false;
         return x < 0 || x >= height || y < 0 || y >= width;
     }
 
     public void populateWithMines(Chunk chunk) {
-        if (chunk.hasTag(POPULATED_TAG))
-            return; // already populated
+        if (chunk.hasTag(POPULATED_TAG)) return; // already populated
 
         double base = 0.09;
         long dx = Math.abs(chunk.getChunkX());
@@ -226,8 +215,7 @@ public final class Board {
         long chebyshev = Math.max(dx, dz);
 
         double difficulty = base + (chebyshev * 0.01);
-        if (difficulty > 0.19)
-            difficulty = 0.19;
+        if (difficulty > 0.19) difficulty = 0.19;
 
         populateWithMines(chunk, difficulty);
     }
@@ -248,8 +236,7 @@ public final class Board {
 
             i++;
 
-            if (isMine(x, y))
-                continue;
+            if (isMine(x, y)) continue;
 
             addMine(x, y);
 
@@ -267,10 +254,8 @@ public final class Board {
                     for (int relY = 0; relY < Chunk.CHUNK_SIZE_Z; relY++) {
                         int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + relY;
 
-                        if (isOutOfBounds(x, y))
-                            continue;
-                        if (!isMine(x, y))
-                            continue;
+                        if (isOutOfBounds(x, y)) continue;
+                        if (!isMine(x, y)) continue;
                         batch.setBlock(x, MapManager.FLOOR_HEIGHT, y, this.theme.mine());
                     }
                 }
@@ -346,8 +331,7 @@ public final class Board {
         chunk.sendChunk();
 
         Set<Flag> flags = chunk.getTag(FLAGS_TAG);
-        if (flags == null)
-            return;
+        if (flags == null) return;
         flags.remove(flag);
     }
 

@@ -43,20 +43,17 @@ public class BoardWriter {
         boolean solved = board.getSolvedChunks().contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ()));
         content.write(BOOLEAN, solved);
 
-        if (solved)
-            return;
+        if (solved) return;
 
         Set<Vec2> clicks = chunk.getTag(Board.CLICKS_TAG);
-        if (clicks == null)
-            clicks = new HashSet<>();
+        if (clicks == null) clicks = new HashSet<>();
         content.write(VAR_INT, clicks.size());
         for (Vec2 click : clicks) {
             content.write(INT, click.x());
             content.write(INT, click.y());
         }
         Set<Flag> flags = chunk.getTag(Board.FLAGS_TAG);
-        if (flags == null)
-            flags = new HashSet<>();
+        if (flags == null) flags = new HashSet<>();
         content.write(VAR_INT, flags.size());
         for (Flag flag : flags) {
             content.write(INT, flag.pos().x());

@@ -50,8 +50,7 @@ public final class InteractionManager {
 
     private void onBreak(@NotNull PlayerBlockBreakEvent event) {
         event.setCancelled(true); // We never actually want to break the block
-        if (this.finished)
-            return;
+        if (this.finished) return;
 
         Player player = event.getPlayer();
 
@@ -60,14 +59,10 @@ public final class InteractionManager {
         int y = pos.blockY();
         int z = pos.blockZ();
 
-        if (this.isOutsideBoard(x, y, z))
-            return;
-        if (this.board.isFlagged(x, z))
-            return;
-        if (this.board.isRevealed(x, z))
-            return;
-        if (!player.getItemInMainHand().isAir())
-            return;
+        if (this.isOutsideBoard(x, y, z)) return;
+        if (this.board.isFlagged(x, z)) return;
+        if (this.board.isRevealed(x, z)) return;
+        if (!player.getItemInMainHand().isAir()) return;
 
         if (this.board.isMine(x, z)) {
             if (this.firstClick) {
@@ -82,15 +77,13 @@ public final class InteractionManager {
         this.firstClick = false;
 
         Chunk chunk = player.getInstance().getChunkAt(pos);
-        if (chunk == null)
-            return;
+        if (chunk == null) return;
 
         this.board.addClick(new Vec2(x, z), chunk);
         Set<Chunk> affectedChunks = this.board.revealAround(x, z);
 
         for (Chunk affectedChunk : affectedChunks) {
-            if (affectedChunk == null)
-                continue;
+            if (affectedChunk == null) continue;
 
             affectedChunk.sendChunk();
 
@@ -112,21 +105,18 @@ public final class InteractionManager {
         // This makes the logic significantly easier, rather than having to cancel
         // everywhere separately, and risking missing something
         event.setCancelled(true);
-        if (this.finished)
-            return;
+        if (this.finished) return;
 
         Player player = event.getPlayer();
         Point pos = event.getBlockPosition();
         Chunk chunk = event.getInstance().getChunkAt(pos);
-        if (chunk == null)
-            return;
+        if (chunk == null) return;
 
         int x = pos.blockX();
         int y = pos.blockY();
         int z = pos.blockZ();
 
-        if (event.getHand() != PlayerHand.MAIN)
-            return;
+        if (event.getHand() != PlayerHand.MAIN) return;
         if (!player.getItemInMainHand().isAir()) {
             // This avoids players being able to place anything other than the carpets that
             // get placed when they click with an empty hand
@@ -147,8 +137,7 @@ public final class InteractionManager {
             return;
         }
 
-        if (this.isInvalidFlag(x, y, z))
-            return;
+        if (this.isInvalidFlag(x, y, z)) return;
 
         player.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_FLAP, Sound.Source.MASTER, 0.6F, 2F));
         this.actionBar.incrementFlags();
@@ -213,8 +202,7 @@ public final class InteractionManager {
     }
 
     private boolean isOutsideBoard(int x, int y, int z) {
-        if (this.board.isOutOfBounds(x, z))
-            return true;
+        if (this.board.isOutOfBounds(x, z)) return true;
         return y != MapManager.FLOOR_HEIGHT;
     }
 
