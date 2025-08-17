@@ -4,6 +4,7 @@ import dev.emortal.minestom.minesweeper.board.Board;
 import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
 import dev.emortal.minestom.minesweeper.game.PlayerTags;
 import dev.emortal.minestom.minesweeper.map.MapManager;
+import dev.emortal.minestom.minesweeper.util.Flag;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.sound.Sound;
@@ -49,7 +50,8 @@ public final class InteractionManager {
 
     private void onBreak(@NotNull PlayerBlockBreakEvent event) {
         event.setCancelled(true); // We never actually want to break the block
-        if (this.finished) return;
+        if (this.finished)
+            return;
 
         Player player = event.getPlayer();
 
@@ -58,10 +60,14 @@ public final class InteractionManager {
         int y = pos.blockY();
         int z = pos.blockZ();
 
-        if (this.isOutsideBoard(x, y, z)) return;
-        if (this.board.isFlagged(x, z)) return;
-        if (this.board.isRevealed(x, z)) return;
-        if (!player.getItemInMainHand().isAir()) return;
+        if (this.isOutsideBoard(x, y, z))
+            return;
+        if (this.board.isFlagged(x, z))
+            return;
+        if (this.board.isRevealed(x, z))
+            return;
+        if (!player.getItemInMainHand().isAir())
+            return;
 
         if (this.board.isMine(x, z)) {
             if (this.firstClick) {
@@ -76,18 +82,20 @@ public final class InteractionManager {
         this.firstClick = false;
 
         Chunk chunk = player.getInstance().getChunkAt(pos);
-        if (chunk == null) return;
+        if (chunk == null)
+            return;
 
         this.board.addClick(new Vec2(x, z), chunk);
         Set<Chunk> affectedChunks = this.board.revealAround(x, z);
 
         for (Chunk affectedChunk : affectedChunks) {
-            if (affectedChunk == null) continue;
+            if (affectedChunk == null)
+                continue;
 
             affectedChunk.sendChunk();
 
             if (this.board.isSolved(affectedChunk)) {
-                this.solveChunk(affectedChunk);
+                this.solveChunk(affectedChunk, player);
             }
         }
 
@@ -104,18 +112,21 @@ public final class InteractionManager {
         // This makes the logic significantly easier, rather than having to cancel
         // everywhere separately, and risking missing something
         event.setCancelled(true);
-        if (this.finished) return;
+        if (this.finished)
+            return;
 
         Player player = event.getPlayer();
         Point pos = event.getBlockPosition();
         Chunk chunk = event.getInstance().getChunkAt(pos);
-        if (chunk == null) return;
+        if (chunk == null)
+            return;
 
         int x = pos.blockX();
         int y = pos.blockY();
         int z = pos.blockZ();
 
-        if (event.getHand() != PlayerHand.MAIN) return;
+        if (event.getHand() != PlayerHand.MAIN)
+            return;
         if (!player.getItemInMainHand().isAir()) {
             // This avoids players being able to place anything other than the carpets that
             // get placed when they click with an empty hand
@@ -130,18 +141,19 @@ public final class InteractionManager {
                 player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
                 this.actionBar.decrementFlags();
 
-                this.board.removeFlag(new Vec2(x, z), chunk);
+                this.board.removeFlag(new Flag(new Vec2(x, z), player.getTag(PlayerTags.COLOR)), chunk);
             }
 
             return;
         }
 
-        if (this.isInvalidFlag(x, y, z)) return;
+        if (this.isInvalidFlag(x, y, z))
+            return;
 
         player.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_FLAP, Sound.Source.MASTER, 0.6F, 2F));
         this.actionBar.incrementFlags();
 
-        this.board.addFlag(new Vec2(x, z), chunk, player.getTag(PlayerTags.COLOR).carpet());
+        this.board.addFlagIfMissing(new Flag(new Vec2(x, z), player.getTag(PlayerTags.COLOR)), chunk);
     }
 
     private void onItemChange(@NotNull InventoryItemChangeEvent event) {
@@ -156,8 +168,8 @@ public final class InteractionManager {
         this.finished = true;
     }
 
-    private void solveChunk(Chunk chunk) {
-        this.board.revealSolved(chunk);
+    private void solveChunk(Chunk chunk, Player player) {
+        this.board.revealSolved(chunk, player.getTag(PlayerTags.COLOR));
         this.board.addSolvedChunk(chunk);
         this.playSolvedChunkSound(this.board.getInstance());
 
@@ -172,7 +184,7 @@ public final class InteractionManager {
         int lives = this.actionBar.decrementLives();
         Chunk chunk = player.getInstance().getChunkAt(new Pos(x, MapManager.FLOOR_HEIGHT, z));
 
-        this.board.addFlag(new Vec2(x, z), chunk, Block.BLACK_CARPET);
+        this.board.addFlag(new Flag(new Vec2(x, z), player.getTag(PlayerTags.COLOR)), Block.BLACK_CARPET, chunk);
 
         Component lossMessage = Component.text().append(Component.text(player.getUsername(), NamedTextColor.RED))
                 .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY)).build();
@@ -201,7 +213,8 @@ public final class InteractionManager {
     }
 
     private boolean isOutsideBoard(int x, int y, int z) {
-        if (this.board.isOutOfBounds(x, z)) return true;
+        if (this.board.isOutOfBounds(x, z))
+            return true;
         return y != MapManager.FLOOR_HEIGHT;
     }
 

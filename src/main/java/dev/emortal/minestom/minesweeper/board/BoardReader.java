@@ -3,6 +3,8 @@ package dev.emortal.minestom.minesweeper.board;
 import com.github.luben.zstd.Zstd;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.map.MapTheme;
+import dev.emortal.minestom.minesweeper.util.Flag;
+import dev.emortal.minestom.minesweeper.util.TeamColor;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
@@ -71,7 +73,7 @@ public class BoardReader {
     private static void readChunk(NetworkBuffer buffer, Board board, Chunk chunk) {
         if (buffer.read(BOOLEAN)) { // if chunk solved
             board.addSolvedChunk(chunk);
-            board.revealSolved(chunk);
+            board.revealSolved(chunk, TeamColor.RED); // Might want to save colours on saved chunks one day
             return;
         }
 
@@ -85,11 +87,12 @@ public class BoardReader {
         chunk.setTag(Board.CLICKS_TAG, clicks);
 
         int flagsCount = buffer.read(VAR_INT);
-        Set<Vec2> flags = new HashSet<>(flagsCount);
+        Set<Flag> flags = new HashSet<>(flagsCount);
         for (int i = 0; i < flagsCount; i++) {
             Integer flagX = buffer.read(INT);
             Integer flagY = buffer.read(INT);
-            flags.add(new Vec2(flagX, flagY));
+            TeamColor color = TeamColor.values()[buffer.read(INT)];
+            flags.add(new Flag(new Vec2(flagX, flagY), color));
             chunk.setBlock(flagX, MapManager.FLOOR_HEIGHT + 1, flagY, Block.RED_CARPET);
         }
         chunk.setTag(Board.FLAGS_TAG, flags);
@@ -102,7 +105,8 @@ public class BoardReader {
     }
 
     static void assertThat(boolean condition, @NotNull String message) {
-        if (!condition) throw new Error(message);
+        if (!condition)
+            throw new Error(message);
     }
 
     public static class Error extends RuntimeException {
