@@ -3,6 +3,8 @@ package dev.emortal.minestom.minesweeper.board;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.map.MapTheme;
 import dev.emortal.minestom.minesweeper.util.Direction8;
+import dev.emortal.minestom.minesweeper.util.Flag;
+import dev.emortal.minestom.minesweeper.util.TeamColor;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
@@ -24,7 +26,7 @@ public final class Board {
     private static final Tag<Boolean> POPULATED_TAG = Tag.Boolean("minesPopulated");
     private static final Tag<Boolean> MINE_TAG = Tag.Boolean("blockHasMine");
     public static final Tag<Set<Vec2>> CLICKS_TAG = Tag.Transient("chunkClicks");
-    public static final Tag<Set<Vec2>> FLAGS_TAG = Tag.Transient("chunkFlags");
+    public static final Tag<Set<Flag>> FLAGS_TAG = Tag.Transient("chunkFlags");
 
     private final int width;
     private final int height;
@@ -123,13 +125,13 @@ public final class Board {
         return true;
     }
 
-    public void revealSolved(Chunk chunk) {
+    public void revealSolved(Chunk chunk, TeamColor color) {
         for (int relX = 0; relX < Chunk.CHUNK_SIZE_X; relX++) {
             int x = chunk.getChunkX() * Chunk.CHUNK_SIZE_X + relX;
             for (int relY = 0; relY < Chunk.CHUNK_SIZE_Z; relY++) {
                 int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + relY;
                 if (isMine(x, y)) {
-                    addFlag(new Vec2(x, y), chunk, Block.RED_CARPET);
+                    this.addFlagIfMissing(new Flag(new Vec2(x, y), color), chunk);
                     continue;
                 }
                 revealAround(x, y);
@@ -290,27 +292,47 @@ public final class Board {
         clicks.add(pos);
     }
 
-    public void addFlag(Vec2 pos, Chunk chunk, Block flagBlock) {
-        Set<Vec2> flags = chunk.getTag(FLAGS_TAG);
+    public void addFlagIfMissing(Flag flag, Chunk chunk) {
+        Set<Flag> flags = chunk.getTag(FLAGS_TAG);
         if (flags == null) {
             flags = new HashSet<>();
             chunk.setTag(FLAGS_TAG, flags);
             addTouchedChunk(chunk);
         }
 
-        chunk.setBlock(pos.x(), MapManager.FLOOR_HEIGHT + 1, pos.y(), flagBlock);
+        if (flags.stream().anyMatch(f -> f.pos().equals(flag.pos()))) {
+            return;
+        }
+        chunk.setBlock(flag.pos().x(), MapManager.FLOOR_HEIGHT + 1, flag.pos().y(), flag.color().carpet());
         chunk.sendChunk();
 
-        flags.add(pos);
+        flags.add(flag);
     }
 
-    public void removeFlag(Vec2 pos, Chunk chunk) {
-        chunk.setBlock(pos.x(), MapManager.FLOOR_HEIGHT + 1, pos.y(), Block.AIR);
+    public void addFlag(Flag flag, Block block, Chunk chunk) {
+        Set<Flag> flags = chunk.getTag(FLAGS_TAG);
+        if (flags == null) {
+            flags = new HashSet<>();
+            chunk.setTag(FLAGS_TAG, flags);
+            addTouchedChunk(chunk);
+        }
+
+        if (flags.stream().anyMatch(f -> f.pos().equals(flag.pos()))) {
+            return;
+        }
+        chunk.setBlock(flag.pos().x(), MapManager.FLOOR_HEIGHT + 1, flag.pos().y(), block);
         chunk.sendChunk();
 
-        Set<Vec2> flags = chunk.getTag(FLAGS_TAG);
+        flags.add(flag);
+    }
+
+    public void removeFlag(Flag flag, Chunk chunk) {
+        chunk.setBlock(flag.pos().x(), MapManager.FLOOR_HEIGHT + 1, flag.pos().y(), Block.AIR);
+        chunk.sendChunk();
+
+        Set<Flag> flags = chunk.getTag(FLAGS_TAG);
         if (flags == null) return;
-        flags.remove(pos);
+        flags.remove(flag);
     }
 
     public void addSolvedChunk(Chunk chunk) {

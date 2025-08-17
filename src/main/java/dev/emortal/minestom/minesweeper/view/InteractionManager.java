@@ -4,6 +4,7 @@ import dev.emortal.minestom.minesweeper.board.Board;
 import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
 import dev.emortal.minestom.minesweeper.game.PlayerTags;
 import dev.emortal.minestom.minesweeper.map.MapManager;
+import dev.emortal.minestom.minesweeper.util.Flag;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.sound.Sound;
@@ -87,7 +88,7 @@ public final class InteractionManager {
             affectedChunk.sendChunk();
 
             if (this.board.isSolved(affectedChunk)) {
-                this.solveChunk(affectedChunk);
+                this.solveChunk(affectedChunk, player);
             }
         }
 
@@ -130,7 +131,7 @@ public final class InteractionManager {
                 player.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.6F, 1.8F));
                 this.actionBar.decrementFlags();
 
-                this.board.removeFlag(new Vec2(x, z), chunk);
+                this.board.removeFlag(new Flag(new Vec2(x, z), player.getTag(PlayerTags.COLOR)), chunk);
             }
 
             return;
@@ -141,7 +142,7 @@ public final class InteractionManager {
         player.playSound(Sound.sound(SoundEvent.ENTITY_ENDER_DRAGON_FLAP, Sound.Source.MASTER, 0.6F, 2F));
         this.actionBar.incrementFlags();
 
-        this.board.addFlag(new Vec2(x, z), chunk, player.getTag(PlayerTags.COLOR).carpet());
+        this.board.addFlagIfMissing(new Flag(new Vec2(x, z), player.getTag(PlayerTags.COLOR)), chunk);
     }
 
     private void onItemChange(@NotNull InventoryItemChangeEvent event) {
@@ -156,8 +157,8 @@ public final class InteractionManager {
         this.finished = true;
     }
 
-    private void solveChunk(Chunk chunk) {
-        this.board.revealSolved(chunk);
+    private void solveChunk(Chunk chunk, Player player) {
+        this.board.revealSolved(chunk, player.getTag(PlayerTags.COLOR));
         this.board.addSolvedChunk(chunk);
         this.playSolvedChunkSound(this.board.getInstance());
 
@@ -172,7 +173,7 @@ public final class InteractionManager {
         int lives = this.actionBar.decrementLives();
         Chunk chunk = player.getInstance().getChunkAt(new Pos(x, MapManager.FLOOR_HEIGHT, z));
 
-        this.board.addFlag(new Vec2(x, z), chunk, Block.BLACK_CARPET);
+        this.board.addFlag(new Flag(new Vec2(x, z), player.getTag(PlayerTags.COLOR)), Block.BLACK_CARPET, chunk);
 
         Component lossMessage = Component.text().append(Component.text(player.getUsername(), NamedTextColor.RED))
                 .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY)).build();

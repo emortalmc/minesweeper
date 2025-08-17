@@ -1,6 +1,8 @@
 package dev.emortal.minestom.minesweeper.board;
 
 import com.github.luben.zstd.Zstd;
+
+import dev.emortal.minestom.minesweeper.util.Flag;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.network.NetworkBuffer;
@@ -50,12 +52,13 @@ public class BoardWriter {
             content.write(INT, click.x());
             content.write(INT, click.y());
         }
-        Set<Vec2> flags = chunk.getTag(Board.FLAGS_TAG);
+        Set<Flag> flags = chunk.getTag(Board.FLAGS_TAG);
         if (flags == null) flags = new HashSet<>();
         content.write(VAR_INT, flags.size());
-        for (Vec2 flag : flags) {
-            content.write(INT, flag.x());
-            content.write(INT, flag.y());
+        for (Flag flag : flags) {
+            content.write(INT, flag.pos().x());
+            content.write(INT, flag.pos().y());
+            content.write(INT, flag.color().ordinal());
         }
     }
 
