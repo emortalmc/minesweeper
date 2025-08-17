@@ -131,7 +131,7 @@ public final class Board {
             for (int relY = 0; relY < Chunk.CHUNK_SIZE_Z; relY++) {
                 int y = chunk.getChunkZ() * Chunk.CHUNK_SIZE_Z + relY;
                 if (isMine(x, y)) {
-                    addFlagIfMissing(new Flag(new Vec2(x, y), color), chunk);
+                    this.addFlagIfMissing(new Flag(new Vec2(x, y), color), chunk);
                     continue;
                 }
                 revealAround(x, y);

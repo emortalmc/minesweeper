@@ -6,6 +6,7 @@ import org.jetbrains.annotations.NotNull;
 
 public enum TeamColor {
 
+    // Ordinal is used by storage so changing order will affect stored data.
     RED(NamedTextColor.RED, Block.RED_CARPET),
     ORANGE(NamedTextColor.GOLD, Block.ORANGE_CARPET),
     CYAN(NamedTextColor.DARK_AQUA, Block.CYAN_CARPET),
