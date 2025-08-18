@@ -18,7 +18,6 @@ public class BoardWriter {
     public static final short LATEST_VERSION = 2;
 
     public static byte[] write(Board board) {
-        short lives = 3;
         var contentBytes = NetworkBuffer.makeArray(content -> {
             Set<Chunk> chunks = board.getTouchedChunks();
             content.write(VAR_INT, chunks.size());
@@ -32,7 +31,6 @@ public class BoardWriter {
             buffer.write(INT, MAGIC_NUMBER);
             buffer.write(SHORT, LATEST_VERSION);
             buffer.write(LONG, board.getSeed());
-            buffer.write(SHORT, lives);
             buffer.write(VAR_INT, contentBytes.length);
             buffer.write(RAW_BYTES, Zstd.compress(contentBytes));
         });

@@ -32,8 +32,6 @@ public class BoardReader {
 
         long seed = buffer.read(LONG);
 
-        short lives = buffer.read(SHORT);
-
         var compressedDataLength = buffer.read(VAR_INT);
 
         // Replace the buffer with the decompressed version

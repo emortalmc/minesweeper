@@ -6,6 +6,7 @@ import dev.emortal.minestom.minesweeper.util.Direction8;
 import dev.emortal.minestom.minesweeper.util.Flag;
 import dev.emortal.minestom.minesweeper.util.TeamColor;
 import dev.emortal.minestom.minesweeper.util.Vec2;
+import dev.emortal.minestom.minesweeper.view.InteractionManager;
 import net.kyori.adventure.key.Key;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.coordinate.CoordConversion;
@@ -16,6 +17,8 @@ import net.minestom.server.instance.batch.AbsoluteBlockBatch;
 import net.minestom.server.instance.block.Block;
 import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.NotNull;
+
+import com.sun.org.apache.bcel.internal.generic.INEG;
 
 import java.util.HashSet;
 import java.util.Random;
