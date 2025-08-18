@@ -8,7 +8,15 @@ import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.Player;
 import net.minestom.server.scoreboard.Team;
 import net.minestom.server.sound.SoundEvent;
+
+import java.io.IOException;
+import java.nio.file.Paths;
+
 import org.jetbrains.annotations.NotNull;
+
+import com.google.common.io.Files;
+
+import dev.emortal.minestom.minesweeper.board.BoardWriter;
 
 public final class PlayerDisconnectHandler {
 
@@ -25,6 +33,13 @@ public final class PlayerDisconnectHandler {
 
         this.sendQuitMessage(left);
         this.playQuitSound();
+
+        byte[] save = BoardWriter.write(game.getBoard());
+        try {
+            Files.write(save, Paths.get("test").toFile());
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
         if (this.game.getPlayers().isEmpty()) {
             this.game.finish();

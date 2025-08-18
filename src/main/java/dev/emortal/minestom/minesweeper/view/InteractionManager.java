@@ -5,6 +5,7 @@ import dev.emortal.minestom.minesweeper.game.MinesweeperGame;
 import dev.emortal.minestom.minesweeper.game.PlayerTags;
 import dev.emortal.minestom.minesweeper.map.MapManager;
 import dev.emortal.minestom.minesweeper.util.Flag;
+import dev.emortal.minestom.minesweeper.util.TeamColor;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.kyori.adventure.audience.Audience;
 import net.kyori.adventure.sound.Sound;
@@ -173,7 +174,7 @@ public final class InteractionManager {
         int lives = this.actionBar.decrementLives();
         Chunk chunk = player.getInstance().getChunkAt(new Pos(x, MapManager.FLOOR_HEIGHT, z));
 
-        this.board.addFlag(new Flag(new Vec2(x, z), player.getTag(PlayerTags.COLOR)), Block.BLACK_CARPET, chunk);
+        this.board.addFlag(new Flag(new Vec2(x, z), TeamColor.BLACK), Block.BLACK_CARPET, chunk);
 
         Component lossMessage = Component.text().append(Component.text(player.getUsername(), NamedTextColor.RED))
                 .append(Component.text(" clicked a bomb :\\", NamedTextColor.GRAY)).build();
@@ -206,10 +207,11 @@ public final class InteractionManager {
         return y != MapManager.FLOOR_HEIGHT;
     }
 
-    private void playRevealSound(@NotNull Audience audience) {
-        audience.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F),
-                Sound.Emitter.self());
-    }
+    // This was not used and the warning was annoying
+    // private void playRevealSound(@NotNull Audience audience) {
+    //     audience.playSound(Sound.sound(SoundEvent.ENTITY_ITEM_PICKUP, Sound.Source.MASTER, 0.5F, 0.7F),
+    //             Sound.Emitter.self());
+    // }
 
     private void playSolvedChunkSound(@NotNull Audience audience) {
         audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 0.5F, 1F),
@@ -226,5 +228,9 @@ public final class InteractionManager {
                 Sound.Emitter.self());
         audience.playSound(Sound.sound(SoundEvent.ENTITY_PLAYER_LEVELUP, Sound.Source.MASTER, 1F, 1F),
                 Sound.Emitter.self());
+    }
+
+    public ActionBar getActionBar() {
+        return this.actionBar;
     }
 }

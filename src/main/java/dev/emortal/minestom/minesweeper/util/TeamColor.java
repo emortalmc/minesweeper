@@ -16,7 +16,11 @@ public enum TeamColor {
     AQUA(NamedTextColor.AQUA, Block.CYAN_CARPET),
     YELLOW(NamedTextColor.YELLOW, Block.YELLOW_CARPET),
     DARK_AQUA(NamedTextColor.DARK_AQUA, Block.CYAN_CARPET),
-    LIGHT_GRAY(NamedTextColor.GRAY, Block.LIGHT_GRAY_CARPET);
+    LIGHT_GRAY(NamedTextColor.GRAY, Block.LIGHT_GRAY_CARPET),
+
+    // NOT A PLAYER
+    // DO NOT INCLUDE IN MAX PLAYER COUNT
+    BLACK(NamedTextColor.BLACK, Block.BLACK_CARPET);
 
     private static final TeamColor[] VALUES = values();
 

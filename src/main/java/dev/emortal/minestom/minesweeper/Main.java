@@ -1,5 +1,10 @@
 package dev.emortal.minestom.minesweeper;
 
+import java.io.IOException;
+import java.nio.file.Paths;
+
+import com.google.common.io.Files;
+
 import dev.emortal.minestom.gamesdk.MinestomGameServer;
 import dev.emortal.minestom.gamesdk.config.GameSdkConfig;
 import dev.emortal.minestom.minesweeper.board.Board;
@@ -18,8 +23,13 @@ public final class Main {
                     .minPlayers(MIN_PLAYERS)
                     .finishBehaviour(GameSdkConfig.FinishBehaviour.REQUEUE)
                     .gameCreator(info -> {
-                        Board board = mapManager.createMap();
-                        return new MinesweeperGame(info, board);
+                        try {
+                            Board board = mapManager.createMap(Files.toByteArray(Paths.get("test").toFile()));
+                            return new MinesweeperGame(info, board);
+                        } catch (IOException e) {
+                            Board board = mapManager.createMap();
+                            return new MinesweeperGame(info, board);
+                        }
                     })
                     .build();
         });

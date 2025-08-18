@@ -14,7 +14,7 @@ public final class ActionBar {
     private final long startTime;
 
     private int flags;
-    private int lives;
+    private short lives;
 
     public ActionBar(@NotNull Instance instance) {
         this.instance = instance;
@@ -32,9 +32,13 @@ public final class ActionBar {
         }
     }
 
-    public int decrementLives() {
+    public short decrementLives() {
         this.lives--;
         this.update();
+        return this.lives;
+    }
+
+    public short getLives() {
         return this.lives;
     }
 

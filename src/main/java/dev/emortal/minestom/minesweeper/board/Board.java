@@ -24,7 +24,7 @@ import java.util.Set;
 public final class Board {
 
     private static final Tag<Boolean> POPULATED_TAG = Tag.Boolean("minesPopulated");
-    private static final Tag<Boolean> MINE_TAG = Tag.Boolean("blockHasMine");
+    public static final Tag<Boolean> MINE_TAG = Tag.Boolean("blockHasMine");
     public static final Tag<Set<Vec2>> CLICKS_TAG = Tag.Transient("chunkClicks");
     public static final Tag<Set<Flag>> FLAGS_TAG = Tag.Transient("chunkFlags");
 
@@ -206,9 +206,7 @@ public final class Board {
         return x < 0 || x >= height || y < 0 || y >= width;
     }
 
-    public void populateWithMines(Chunk chunk) {
-        if (chunk.hasTag(POPULATED_TAG)) return; // already populated
-
+    private double getMinePercentage(Chunk chunk) {
         double base = 0.09;
         long dx = Math.abs(chunk.getChunkX());
         long dz = Math.abs(chunk.getChunkZ());
@@ -217,7 +215,15 @@ public final class Board {
         double difficulty = base + (chebyshev * 0.01);
         if (difficulty > 0.19) difficulty = 0.19;
 
-        populateWithMines(chunk, difficulty);
+        return difficulty;
+    }
+
+    public void populateWithMines(Chunk chunk) {
+        if (chunk.hasTag(POPULATED_TAG)) return; // already populated
+
+        double difficulty = this.getMinePercentage(chunk);
+
+        this.populateWithMines(chunk, difficulty);
     }
 
     public void populateWithMines(Chunk chunk, double minePercent) {

@@ -8,7 +8,6 @@ import dev.emortal.minestom.minesweeper.util.TeamColor;
 import dev.emortal.minestom.minesweeper.util.Vec2;
 import net.minestom.server.instance.Chunk;
 import net.minestom.server.instance.Instance;
-import net.minestom.server.instance.block.Block;
 import net.minestom.server.network.NetworkBuffer;
 import org.jetbrains.annotations.NotNull;
 
@@ -33,13 +32,14 @@ public class BoardReader {
 
         long seed = buffer.read(LONG);
 
+        short lives = buffer.read(SHORT);
+
         var compressedDataLength = buffer.read(VAR_INT);
 
         // Replace the buffer with the decompressed version
         var bytes = Zstd.decompress(buffer.read(RAW_BYTES), compressedDataLength);
-        var newBuffer = NetworkBuffer.wrap(bytes, 0, 0);
-        newBuffer.writeIndex(bytes.length);
-        buffer = newBuffer;
+        buffer = NetworkBuffer.wrap(bytes, 0, 0);
+        buffer.writeIndex(bytes.length);
 
         Board board = new Board(seed, instance, MapTheme.DEFAULT);
 
@@ -53,7 +53,7 @@ public class BoardReader {
             Chunk chunk = board.getInstance().loadChunk(chunkX, chunkZ).join();
             board.populateWithMines(chunk);
             board.addTouchedChunk(chunk);
-            readChunk(newBuffer, board, chunk);
+            readChunk(buffer, board, chunk);
 
             chunks.add(chunk);
         }
@@ -71,20 +71,17 @@ public class BoardReader {
     }
 
     private static void readChunk(NetworkBuffer buffer, Board board, Chunk chunk) {
-        if (buffer.read(BOOLEAN)) { // if chunk solved
-            board.addSolvedChunk(chunk);
-            board.revealSolved(chunk, TeamColor.RED); // Might want to save colours on saved chunks one day
-            return;
+        boolean solved = buffer.read(BOOLEAN);
+        if (!solved) {
+            int clickCount = buffer.read(VAR_INT);
+            Set<Vec2> clicks = new HashSet<>(clickCount);
+            for (int i = 0; i < clickCount; i++) {
+                Integer clickX = buffer.read(INT);
+                Integer clickY = buffer.read(INT);
+                clicks.add(new Vec2(clickX, clickY));
+            }
+            chunk.setTag(Board.CLICKS_TAG, clicks);
         }
-
-        int clickCount = buffer.read(VAR_INT);
-        Set<Vec2> clicks = new HashSet<>(clickCount);
-        for (int i = 0; i < clickCount; i++) {
-            Integer clickX = buffer.read(INT);
-            Integer clickY = buffer.read(INT);
-            clicks.add(new Vec2(clickX, clickY));
-        }
-        chunk.setTag(Board.CLICKS_TAG, clicks);
 
         int flagsCount = buffer.read(VAR_INT);
         Set<Flag> flags = new HashSet<>(flagsCount);
@@ -93,9 +90,15 @@ public class BoardReader {
             Integer flagY = buffer.read(INT);
             TeamColor color = TeamColor.values()[buffer.read(INT)];
             flags.add(new Flag(new Vec2(flagX, flagY), color));
-            chunk.setBlock(flagX, MapManager.FLOOR_HEIGHT + 1, flagY, Block.RED_CARPET);
+            chunk.setBlock(flagX, MapManager.FLOOR_HEIGHT + 1, flagY, color.carpet());
         }
         chunk.setTag(Board.FLAGS_TAG, flags);
+
+        if (solved) {
+            board.addSolvedChunk(chunk);
+            board.revealSolved(chunk, TeamColor.BLACK); //Color does not matter here. All mine already flagged
+        }
+
     }
 
     static void validateVersion(int version) {

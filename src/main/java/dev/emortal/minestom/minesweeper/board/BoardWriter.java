@@ -15,9 +15,10 @@ import static net.minestom.server.network.NetworkBuffer.*;
 public class BoardWriter {
 
     public static final int MAGIC_NUMBER = 0x4D696E65; // `Mine`
-    public static final short LATEST_VERSION = 1;
+    public static final short LATEST_VERSION = 2;
 
     public static byte[] write(Board board) {
+        short lives = 3;
         var contentBytes = NetworkBuffer.makeArray(content -> {
             Set<Chunk> chunks = board.getTouchedChunks();
             content.write(VAR_INT, chunks.size());
@@ -31,6 +32,7 @@ public class BoardWriter {
             buffer.write(INT, MAGIC_NUMBER);
             buffer.write(SHORT, LATEST_VERSION);
             buffer.write(LONG, board.getSeed());
+            buffer.write(SHORT, lives);
             buffer.write(VAR_INT, contentBytes.length);
             buffer.write(RAW_BYTES, Zstd.compress(contentBytes));
         });
@@ -43,17 +45,20 @@ public class BoardWriter {
         boolean solved = board.getSolvedChunks().contains(new Vec2(chunk.getChunkX(), chunk.getChunkZ()));
         content.write(BOOLEAN, solved);
 
-        if (solved) return;
-
-        Set<Vec2> clicks = chunk.getTag(Board.CLICKS_TAG);
-        if (clicks == null) clicks = new HashSet<>();
-        content.write(VAR_INT, clicks.size());
-        for (Vec2 click : clicks) {
-            content.write(INT, click.x());
-            content.write(INT, click.y());
+        if (!solved) {
+            Set<Vec2> clicks = chunk.getTag(Board.CLICKS_TAG);
+            if (clicks == null)
+                clicks = new HashSet<>();
+            content.write(VAR_INT, clicks.size());
+            for (Vec2 click : clicks) {
+                content.write(INT, click.x());
+                content.write(INT, click.y());
+            }
         }
+
         Set<Flag> flags = chunk.getTag(Board.FLAGS_TAG);
-        if (flags == null) flags = new HashSet<>();
+        if (flags == null)
+            flags = new HashSet<>();
         content.write(VAR_INT, flags.size());
         for (Flag flag : flags) {
             content.write(INT, flag.pos().x());
@@ -61,5 +66,4 @@ public class BoardWriter {
             content.write(INT, flag.color().ordinal());
         }
     }
-
 }
