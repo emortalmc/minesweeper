@@ -5,6 +5,7 @@ import java.nio.file.Paths;
 
 import com.google.common.io.Files;
 
+import dev.emortal.api.model.gamedata.V1MinesweeperSave;
 import dev.emortal.minestom.gamesdk.MinestomGameServer;
 import dev.emortal.minestom.gamesdk.config.GameSdkConfig;
 import dev.emortal.minestom.minesweeper.board.Board;

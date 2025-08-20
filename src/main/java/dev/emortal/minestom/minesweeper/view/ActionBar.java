@@ -19,7 +19,7 @@ public final class ActionBar {
     public ActionBar(@NotNull Board board) {
         this.board = board;
         this.instance = board.getInstance();
-        this.startTime = System.currentTimeMillis();
+        this.startTime = System.currentTimeMillis() - this.board.duration.toMillis();
 
         // Keep action bar shown
         this.instance.scheduler().buildTask(this::update).repeat(TaskSchedule.tick(20)).schedule();
@@ -54,7 +54,7 @@ public final class ActionBar {
 
     public void update() {
         long now = System.currentTimeMillis();
-        Duration duration = Duration.ofMillis(now - this.startTime);
+        this.board.duration = Duration.ofMillis(now - this.startTime);
 
         // ☠ {mines} MINES | ⚑ {flags} FLAGS | ⌚ 1m 23s
         this.instance.sendActionBar(Component.text().append(Component.text("⚑ ", NamedTextColor.GREEN))
@@ -65,7 +65,7 @@ public final class ActionBar {
                 .append(Component.text(" LIVES", NamedTextColor.RED))
                 .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
                 .append(Component.text("⌚ ", NamedTextColor.AQUA))
-                .append(Component.text(this.formatDuration(duration), NamedTextColor.AQUA)));
+                .append(Component.text(this.formatDuration(this.board.duration), NamedTextColor.AQUA)));
     }
 
     private @NotNull String formatDuration(@NotNull Duration duration) {

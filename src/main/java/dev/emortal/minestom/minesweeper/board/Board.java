@@ -17,6 +17,7 @@ import net.minestom.server.instance.block.Block;
 import net.minestom.server.tag.Tag;
 import org.jetbrains.annotations.NotNull;
 
+import java.time.Duration;
 import java.util.HashSet;
 import java.util.Random;
 import java.util.Set;
@@ -38,10 +39,11 @@ public final class Board {
     private final @NotNull Set<Vec2> solvedChunks = new HashSet<>();
     private final @NotNull Set<Vec2> touchedChunks = new HashSet<>();
 
-    public int flags;
-    public short lives;
+    public int flags = 0;
+    public short lives = 0;
+    public Duration duration = Duration.ofMillis(0);
 
-    public Board(long seed, @NotNull Instance instance, @NotNull MapTheme theme, short lives, int flags) {
+    public Board(long seed, @NotNull Instance instance, @NotNull MapTheme theme, short lives, int flags, long duration) {
         this.width = 0;
         this.height = 0;
         this.infinite = true;
@@ -50,6 +52,16 @@ public final class Board {
         this.theme = theme;
         this.lives = lives;
         this.flags = flags;
+        this.duration = Duration.ofMillis(duration);
+    }
+
+    public Board(long seed, @NotNull Instance instance, @NotNull MapTheme theme) {
+        this.width = 0;
+        this.height = 0;
+        this.infinite = true;
+        this.seed = seed;
+        this.instance = instance;
+        this.theme = theme;
     }
 
     public Board(int width, int height, long seed, @NotNull Instance instance, @NotNull MapTheme theme) {

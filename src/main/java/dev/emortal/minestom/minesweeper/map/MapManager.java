@@ -51,9 +51,8 @@ public final class MapManager {
         Instance instance = createInstance(theme);
 
         long seed = ThreadLocalRandom.current().nextLong();
-        short lives = 3;
 
-        return new Board(seed, instance, theme, lives, 0);
+        return new Board(seed, instance, theme);
     }
 
     public @NotNull Board createMap(byte[] data) {

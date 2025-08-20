@@ -36,6 +36,8 @@ public class BoardReader {
 
         int flags = buffer.read(INT);
 
+        long duration = buffer.read(LONG);
+
         var compressedDataLength = buffer.read(VAR_INT);
 
         // Replace the buffer with the decompressed version
@@ -43,7 +45,7 @@ public class BoardReader {
         buffer = NetworkBuffer.wrap(bytes, 0, 0);
         buffer.writeIndex(bytes.length);
 
-        Board board = new Board(seed, instance, MapTheme.DEFAULT, lives, flags);
+        Board board = new Board(seed, instance, MapTheme.DEFAULT, lives, flags, duration);
 
         List<Chunk> chunks = new ArrayList<>();
 

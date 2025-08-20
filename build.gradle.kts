@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation(files("../proto-specs/build/libs/proto-specs-1.0.jar"))
+    implementation("dev.emortal.api:common-proto-sdk:local")
     implementation("dev.emortal.minestom:game-sdk:c30a7db")
     implementation("com.github.luben:zstd-jni:1.5.7-4")
 }

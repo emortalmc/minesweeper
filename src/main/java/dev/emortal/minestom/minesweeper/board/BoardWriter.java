@@ -33,6 +33,7 @@ public class BoardWriter {
             buffer.write(LONG, board.getSeed());
             buffer.write(SHORT, board.lives);
             buffer.write(INT, board.flags);
+            buffer.write(LONG, board.duration.toMillis());
             buffer.write(VAR_INT, contentBytes.length);
             buffer.write(RAW_BYTES, Zstd.compress(contentBytes));
         });
