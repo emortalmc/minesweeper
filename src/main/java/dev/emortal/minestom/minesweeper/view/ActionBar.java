@@ -6,19 +6,19 @@ import net.minestom.server.instance.Instance;
 import net.minestom.server.timer.TaskSchedule;
 import org.jetbrains.annotations.NotNull;
 
+import dev.emortal.minestom.minesweeper.board.Board;
+
 import java.time.Duration;
 
 public final class ActionBar {
 
+    private final @NotNull Board board;
     private final @NotNull Instance instance;
     private final long startTime;
 
-    private int flags;
-    private short lives;
-
-    public ActionBar(@NotNull Instance instance) {
-        this.instance = instance;
-        this.lives = 3;
+    public ActionBar(@NotNull Board board) {
+        this.board = board;
+        this.instance = board.getInstance();
         this.startTime = System.currentTimeMillis();
 
         // Keep action bar shown
@@ -26,29 +26,29 @@ public final class ActionBar {
     }
 
     public void incrementLives() {
-        if (this.lives < 3) {
-            this.lives++;
+        if (this.board.lives < 3) {
+            this.board.lives++;
             this.update();
         }
     }
 
     public short decrementLives() {
-        this.lives--;
+        this.board.lives--;
         this.update();
-        return this.lives;
+        return this.board.lives;
     }
 
     public short getLives() {
-        return this.lives;
+        return this.board.lives;
     }
 
     public void incrementFlags() {
-        this.flags++;
+        this.board.flags++;
         this.update();
     }
 
     public void decrementFlags() {
-        this.flags--;
+        this.board.flags--;
         this.update();
     }
 
@@ -58,10 +58,10 @@ public final class ActionBar {
 
         // ☠ {mines} MINES | ⚑ {flags} FLAGS | ⌚ 1m 23s
         this.instance.sendActionBar(Component.text().append(Component.text("⚑ ", NamedTextColor.GREEN))
-                .append(Component.text(this.flags, NamedTextColor.GREEN))
+                .append(Component.text(this.board.flags, NamedTextColor.GREEN))
                 .append(Component.text(" FLAGS", NamedTextColor.GREEN))
                 .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
-                .append(Component.text("♥ ", NamedTextColor.RED)).append(Component.text(this.lives, NamedTextColor.RED))
+                .append(Component.text("♥ ", NamedTextColor.RED)).append(Component.text(this.board.lives, NamedTextColor.RED))
                 .append(Component.text(" LIVES", NamedTextColor.RED))
                 .append(Component.text(" | ", NamedTextColor.DARK_GRAY))
                 .append(Component.text("⌚ ", NamedTextColor.AQUA))

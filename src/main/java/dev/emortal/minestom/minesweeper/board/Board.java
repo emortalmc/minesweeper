@@ -38,13 +38,18 @@ public final class Board {
     private final @NotNull Set<Vec2> solvedChunks = new HashSet<>();
     private final @NotNull Set<Vec2> touchedChunks = new HashSet<>();
 
-    public Board(long seed, @NotNull Instance instance, @NotNull MapTheme theme) {
+    public int flags;
+    public short lives;
+
+    public Board(long seed, @NotNull Instance instance, @NotNull MapTheme theme, short lives, int flags) {
         this.width = 0;
         this.height = 0;
         this.infinite = true;
         this.seed = seed;
         this.instance = instance;
         this.theme = theme;
+        this.lives = lives;
+        this.flags = flags;
     }
 
     public Board(int width, int height, long seed, @NotNull Instance instance, @NotNull MapTheme theme) {

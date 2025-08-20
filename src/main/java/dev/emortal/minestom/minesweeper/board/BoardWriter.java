@@ -31,6 +31,8 @@ public class BoardWriter {
             buffer.write(INT, MAGIC_NUMBER);
             buffer.write(SHORT, LATEST_VERSION);
             buffer.write(LONG, board.getSeed());
+            buffer.write(SHORT, board.lives);
+            buffer.write(INT, board.flags);
             buffer.write(VAR_INT, contentBytes.length);
             buffer.write(RAW_BYTES, Zstd.compress(contentBytes));
         });
