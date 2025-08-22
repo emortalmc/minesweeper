@@ -16,7 +16,6 @@ import org.jetbrains.annotations.NotNull;
 
 import com.google.common.io.Files;
 
-import dev.emortal.api.model.gamedata.V1MinesweeperSave;
 import dev.emortal.minestom.minesweeper.board.BoardWriter;
 
 public final class PlayerDisconnectHandler {
@@ -36,7 +35,6 @@ public final class PlayerDisconnectHandler {
         this.playQuitSound();
 
         byte[] save = BoardWriter.write(game.getBoard());
-        V1MinesweeperSave.SAVE_DATA_FIELD_NUMBER = save
         try {
             Files.write(save, Paths.get("test").toFile());
         } catch (IOException e) {
