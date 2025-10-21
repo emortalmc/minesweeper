@@ -9,7 +9,7 @@ import dev.emortal.minestom.minesweeper.map.MapManager;
 public final class Main {
     private static final int MIN_PLAYERS = 1;
 
-    public static void main(String[] args) {
+    void main() {
         MinestomGameServer.create(moduleManager -> {
             MapManager mapManager = new MapManager();
             mapManager.registerDimensions();
