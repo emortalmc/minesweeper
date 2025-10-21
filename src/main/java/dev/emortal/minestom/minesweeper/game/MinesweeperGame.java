@@ -14,6 +14,7 @@ import net.kyori.adventure.title.Title;
 import net.minestom.server.MinecraftServer;
 import net.minestom.server.entity.GameMode;
 import net.minestom.server.entity.Player;
+import net.minestom.server.entity.attribute.Attribute;
 import net.minestom.server.event.player.PlayerBlockBreakEvent;
 import net.minestom.server.instance.Instance;
 import net.minestom.server.timer.TaskSchedule;
@@ -67,6 +68,7 @@ public final class MinesweeperGame extends Game {
     public void onJoin(@NotNull Player player) {
         player.setAutoViewable(true);
         player.setGameMode(GameMode.CREATIVE);
+        player.getAttribute(Attribute.BLOCK_INTERACTION_RANGE).setBaseValue(12);
         this.teamAllocator.allocate(player);
 
         player.sendMessage(Component.text("Infinite Minesweeper is WIP - Your progress is not yet saved", NamedTextColor.AQUA));
