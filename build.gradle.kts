@@ -18,7 +18,7 @@ repositories {
 }
 
 dependencies {
-    implementation("dev.emortal.minestom:game-sdk:3847948")
+    implementation("dev.emortal.minestom:game-sdk:fe1f6a1")
     implementation("com.github.luben:zstd-jni:1.5.7-4")
 }
 
@@ -48,5 +48,10 @@ tasks {
 
     build {
         dependsOn(shadowJar)
+    }
+
+    withType<JavaCompile> {
+        options.encoding = "UTF-8"
+        options.isDeprecation = true
     }
 }
